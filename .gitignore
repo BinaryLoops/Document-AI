@@ -37,6 +37,7 @@ backend/vault/
 backend/gen_keys/
 backend/generated_pdfs/
 backend/logs/
+backend/backend-startup.*
 
 # Local tooling and OS files
 .vscode/

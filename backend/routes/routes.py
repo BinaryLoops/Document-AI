@@ -32,7 +32,8 @@ except ImportError:
 from document.ocr_processor import extract_text_from_image
 from document.document_classifier import DocumentClassifier
 from document.field_extractor import FieldExtractor
-from storage.cloudinary_client import upload_bytes
+from document.staging_store import staging_store, StagedDocument
+from storage.cloudinary_client import upload_bytes, delete_file
 
 # Knowledge graph singleton
 try:
@@ -303,46 +304,44 @@ class RAGAPIRouter:
                         m["document_type"] = doc_type
                         m["source"] = file.filename
 
-                    # Index into FAISS
-                    _fb_update({"status": "INDEXING"})
-                    doc_ids = self.rag_engine.add_documents(chunks, chunk_metadata)
-                    _fb_update({
-                        "status": "INDEXING_KG",
-                        "chunk_count": len(chunks),
-                        "chunk_ids": doc_ids,
-                    })
-
                     # -------------------------------------------------------
-                    # Knowledge Graph population
+                    # Stage for review — the document is fully analyzed but
+                    # NOT yet indexed into RAG/KG or marked complete. The
+                    # citizen reviews the detected type/fields and explicitly
+                    # confirms (POST /upload/{document_id}/confirm) or
+                    # discards (POST /upload/{document_id}/discard) before
+                    # it becomes part of their permanent document record.
                     # -------------------------------------------------------
-                    kg_stats = {}
-                    if build_kg and KG_AVAILABLE:
-                        # Structured fields first (clean typed nodes from extractor)
-                        kg_manager.process_extracted_fields(
-                            document_id=doc_id,
-                            filename=file.filename,
-                            document_type=doc_type,
-                            extracted_fields=extracted_fields,
-                            chunks=chunks,
-                        )
-                        # Regex extraction on raw OCR text for anything missed
-                        kg_manager.process_document(chunks, chunk_metadata)
-                        kg_stats = kg_manager.get_stats()
-
-                    _fb_update({"status": "COMPLETED"})
+                    _fb_update({"status": "PENDING_REVIEW"})
+                    staging_store.put(StagedDocument(
+                        document_id=doc_id,
+                        filename=file.filename,
+                        ext=ext,
+                        chunks=chunks,
+                        chunk_metadata=chunk_metadata,
+                        document_type=doc_type,
+                        classification_confidence=float(classification_confidence),
+                        extracted_fields=extracted_fields,
+                        cloudinary_file=cloudinary_file,
+                        build_kg=build_kg,
+                        start_time=start_time,
+                    ))
 
                     return {
-                      "success": True,
-                      "url": cloudinary_file["fileUrl"],
-                      "publicId": cloudinary_file["publicId"],
-                        "status": "success",
-                        "message": f"Processed document into {len(chunks)} chunks",
+                        "success": True,
+                        "url": cloudinary_file["fileUrl"],
+                        "publicId": cloudinary_file["publicId"],
+                        "status": "pending_review",
+                        "message": (
+                            f"Analyzed document into {len(chunks)} chunk(s). "
+                            "Review the detected details and confirm to save, "
+                            "or discard to upload a different file."
+                        ),
                         "document_id": doc_id,
                         "document_type": doc_type,
                         "classification_confidence": float(classification_confidence),
                         "extracted_fields": extracted_fields,
                         "chunk_count": len(chunks),
-                        "document_ids": doc_ids,
                         "processing_time_seconds": round(
                             time.time() - start_time, 2
                         ),
@@ -351,7 +350,7 @@ class RAGAPIRouter:
                         "public_id": cloudinary_file["publicId"],
                         "file_type": cloudinary_file["format"],
                         "file_size": cloudinary_file["bytes"],
-                        "knowledge_graph": kg_stats,
+                        "expires_in_seconds": staging_store.ttl_seconds,
                     }
                 finally:
                     os.unlink(temp_path)
@@ -363,6 +362,122 @@ class RAGAPIRouter:
                     status_code=500,
                     detail=f"Failed to process document: {str(e)}",
                 )
+
+        # -------------------------------------------------------------------
+        # Upload confirm / discard — completes the two-step review flow
+        # -------------------------------------------------------------------
+
+        def _doc_ref(doc_id: str):
+            if not FIREBASE_AVAILABLE:
+                return None
+            try:
+                return get_db().collection("documents").document(doc_id)
+            except Exception:
+                return None
+
+        def _update_doc(doc_id: str, data: dict):
+            ref = _doc_ref(doc_id)
+            if ref:
+                try:
+                    ref.update(data)
+                except Exception:
+                    pass
+
+        @self.app.post(
+            "/upload/{document_id}/confirm",
+            response_model=Dict[str, Any],
+            summary="Confirm a staged upload and finalize it (index into RAG/KG)",
+            tags=["RAG"],
+        )
+        async def confirm_upload(document_id: str):
+            staged = staging_store.pop(document_id)
+            if staged is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=(
+                        "No pending upload found for this document_id — it may "
+                        "have already been confirmed/discarded, or the review "
+                        "window expired. Please upload the file again."
+                    ),
+                )
+
+            try:
+                _update_doc(document_id, {"status": "INDEXING"})
+                doc_ids = self.rag_engine.add_documents(
+                    staged.chunks, staged.chunk_metadata
+                )
+
+                kg_stats = {}
+                if staged.build_kg and KG_AVAILABLE:
+                    kg_manager.process_extracted_fields(
+                        document_id=staged.document_id,
+                        filename=staged.filename,
+                        document_type=staged.document_type,
+                        extracted_fields=staged.extracted_fields,
+                        chunks=staged.chunks,
+                    )
+                    kg_manager.process_document(staged.chunks, staged.chunk_metadata)
+                    kg_stats = kg_manager.get_stats()
+
+                _update_doc(document_id, {"status": "COMPLETED"})
+
+                return {
+                    "success": True,
+                    "status": "success",
+                    "message": f"Document confirmed and indexed into {len(staged.chunks)} chunks",
+                    "document_id": staged.document_id,
+                    "document_type": staged.document_type,
+                    "classification_confidence": staged.classification_confidence,
+                    "extracted_fields": staged.extracted_fields,
+                    "chunk_count": len(staged.chunks),
+                    "document_ids": doc_ids,
+                    "processing_time_seconds": round(time.time() - staged.start_time, 2),
+                    "firebase_enabled": FIREBASE_AVAILABLE,
+                    "file_url": staged.cloudinary_file["fileUrl"],
+                    "public_id": staged.cloudinary_file["publicId"],
+                    "file_type": staged.cloudinary_file["format"],
+                    "file_size": staged.cloudinary_file["bytes"],
+                    "knowledge_graph": kg_stats,
+                }
+            except Exception as e:
+                logger.error("Document confirm failed: %s", e, exc_info=True)
+                _update_doc(document_id, {"status": "FAILED", "error": str(e)})
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to confirm document: {str(e)}",
+                )
+
+        @self.app.post(
+            "/upload/{document_id}/discard",
+            response_model=Dict[str, Any],
+            summary="Discard a staged upload (e.g. wrong file, poor scan)",
+            tags=["RAG"],
+        )
+        async def discard_upload(document_id: str):
+            staged = staging_store.pop(document_id)
+            if staged is None:
+                # Already confirmed, already discarded, or the review window
+                # expired — either way the client is free to upload again.
+                return {
+                    "success": True,
+                    "status": "not_found",
+                    "message": "No pending upload found for this document_id.",
+                }
+
+            try:
+                resource_type = staged.cloudinary_file.get("resourceType", "raw")
+                delete_file(staged.cloudinary_file["publicId"], resource_type=resource_type)
+            except Exception as e:
+                logger.warning("Failed to delete discarded Cloudinary asset: %s", e)
+
+            _update_doc(document_id, {"status": "DISCARDED"})
+
+            return {
+                "success": True,
+                "status": "discarded",
+                "message": "Upload discarded. You can upload another document.",
+                "document_id": document_id,
+            }
 
         # -------------------------------------------------------------------
         # Document status

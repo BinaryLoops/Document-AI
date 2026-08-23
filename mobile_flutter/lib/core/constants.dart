@@ -15,13 +15,16 @@ class AppConstants {
   ///   flutter run --dart-define=API_BASE_URL=http://192.168.1.10:8000
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.73.193.86:8000',
+    defaultValue: 'http://172.16.44.106:8000',
   );
 
   static const String offlineDemoToken = 'offline-demo-session';
 
-  static const Duration apiConnectTimeout = Duration(seconds: 15);
-  static const Duration apiReceiveTimeout = Duration(seconds: 30);
+  // Kept short so the app opens fast and fails over to offline/cached state
+  // quickly when the backend is unreachable (e.g. different Wi-Fi, no
+  // internet) instead of hanging on a long connection attempt.
+  static const Duration apiConnectTimeout = Duration(seconds: 8);
+  static const Duration apiReceiveTimeout = Duration(seconds: 20);
   static const Duration apiUploadTimeout = Duration(seconds: 90);
 
   // Secure storage keys

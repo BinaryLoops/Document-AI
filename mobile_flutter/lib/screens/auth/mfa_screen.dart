@@ -45,7 +45,7 @@ class _MfaScreenState extends State<MfaScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Multi-Factor Authentication')),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

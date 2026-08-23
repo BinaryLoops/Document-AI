@@ -27,6 +27,7 @@ class UploadDocumentScreen extends StatefulWidget {
 class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
   File? _pickedFile;
   bool _uploading = false;
+  bool _finalizing = false;
   double _progressStage = 0;
   String _stageLabel = '';
   Map<String, dynamic>? _result;
@@ -134,12 +135,19 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
       final suggested = _categoryForDocumentType(
         result['document_type']?.toString(),
       );
-      await StorageService.instance.saveLocalDocument({
-        ...result,
-        'filename': p.basename(_pickedFile!.path),
-        'uploaded_at': DateTime.now().toIso8601String(),
-        if (suggested != null) 'category': suggested,
-      });
+      // Documents come back as "pending_review" first — they're analyzed
+      // (OCR + classification + field extraction) but held temporarily on
+      // the server, not yet saved permanently. Only a confirmed document is
+      // persisted locally; this lets the citizen catch a wrong file or a
+      // bad scan before it becomes part of their record.
+      if (result['status'] != 'pending_review') {
+        await StorageService.instance.saveLocalDocument({
+          ...result,
+          'filename': p.basename(_pickedFile!.path),
+          'uploaded_at': DateTime.now().toIso8601String(),
+          if (suggested != null) 'category': suggested,
+        });
+      }
       setState(() {
         _result = result;
         if (suggested != null) _category = suggested;
@@ -149,6 +157,65 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
       setState(() => _error = e.toString().replaceFirst('ApiException: ', ''));
     } finally {
       setState(() => _uploading = false);
+    }
+  }
+
+  /// Keeps the reviewed document: finalizes it on the server (indexing +
+  /// knowledge graph) and only then saves it into the citizen's local
+  /// document list.
+  Future<void> _confirm() async {
+    final documentId = (_result?['document_id'] ?? _result?['id'])?.toString();
+    if (documentId == null) return;
+    setState(() {
+      _finalizing = true;
+      _error = null;
+    });
+    try {
+      final result = await ApiService.instance.confirmDocument(documentId);
+      final suggested = _categoryForDocumentType(
+        result['document_type']?.toString(),
+      );
+      await StorageService.instance.saveLocalDocument({
+        ...result,
+        'filename': _pickedFile != null
+            ? p.basename(_pickedFile!.path)
+            : result['filename'],
+        'uploaded_at': DateTime.now().toIso8601String(),
+        if (suggested != null) 'category': suggested,
+      });
+      setState(() {
+        _result = result;
+        if (suggested != null) _category = suggested;
+      });
+    } catch (e) {
+      setState(() => _error = e.toString().replaceFirst('ApiException: ', ''));
+    } finally {
+      setState(() => _finalizing = false);
+    }
+  }
+
+  /// Discards the reviewed document (wrong file, poor scan, etc.) and
+  /// resets the screen so the citizen can pick/scan another one.
+  Future<void> _discard() async {
+    final documentId = (_result?['document_id'] ?? _result?['id'])?.toString();
+    setState(() {
+      _finalizing = true;
+      _error = null;
+    });
+    try {
+      if (documentId != null) {
+        await ApiService.instance.discardDocument(documentId);
+      }
+    } catch (_) {
+      // Best-effort — even if the discard call fails (e.g. already expired
+      // server-side), let the citizen move on and try another upload.
+    } finally {
+      setState(() {
+        _finalizing = false;
+        _result = null;
+        _pickedFile = null;
+        _progressStage = 0;
+      });
     }
   }
 
@@ -339,19 +406,28 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
         (r['classification_confidence'] as num?)?.toDouble() ?? 0.0;
     final fields = (r['extracted_fields'] as List?) ?? [];
     final documentId = (r['document_id'] ?? r['id'])?.toString();
+    final isPendingReview = r['status'] == 'pending_review';
+
+    final fieldsWithValues = fields
+        .where((f) => f is Map && (f['value'] as Object?) != null)
+        .toList();
+    final displayFields = fieldsWithValues.isNotEmpty ? fieldsWithValues : fields;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Card(
-          color: Colors.green.withValues(alpha: 0.08),
+          color: (isPendingReview ? Colors.orange : Colors.green)
+              .withValues(alpha: 0.08),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: Colors.green,
+                Icon(
+                  isPendingReview
+                      ? Icons.rate_review_rounded
+                      : Icons.check_circle_rounded,
+                  color: isPendingReview ? Colors.orange : Colors.green,
                   size: 28,
                 ),
                 const SizedBox(width: 12),
@@ -359,9 +435,11 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Processed Successfully',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                      Text(
+                        isPendingReview
+                            ? 'Review Before Saving'
+                            : 'Saved Successfully',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                       Text(
                         'Classified as "$docType" (${(confidence * 100).toStringAsFixed(0)}% confidence)',
@@ -374,10 +452,21 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
             ),
           ),
         ),
-        if (fields.isNotEmpty) ...[
+        if (isPendingReview) ...[
+          const SizedBox(height: 10),
+          Text(
+            'Check the details detected below. Confirm to save this document, '
+            'or discard it to upload a different file or a clearer scan.',
+            style: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        if (displayFields.isNotEmpty) ...[
           SectionHeader(title: 'Extracted Fields'),
-          ...fields
-              .take(6)
+          ...displayFields
+              .take(8)
               .map(
                 (f) => Card(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -390,7 +479,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                               .toUpperCase() ??
                           '',
                     ),
-                    subtitle: Text(f['value']?.toString() ?? '—'),
+                    subtitle: Text(f['value']?.toString() ?? 'Not detected'),
                     trailing: Text(
                       '${(((f['confidence'] as num?) ?? 0) * 100).toStringAsFixed(0)}%',
                     ),
@@ -399,33 +488,63 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
               ),
         ],
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () =>
-                    Navigator.of(context).popUntil((r) => r.isFirst),
-                child: const Text('Done'),
+        if (isPendingReview)
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _finalizing ? null : _discard,
+                  icon: const Icon(Icons.replay_rounded),
+                  label: const Text('Discard & Retry'),
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton(
-                onPressed: documentId == null
-                    ? null
-                    : () => Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => DocumentDetailScreen(
-                            documentId: documentId,
-                            initialData: r,
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _finalizing ? null : _confirm,
+                  icon: _finalizing
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.check_rounded),
+                  label: const Text('Confirm & Save'),
+                ),
+              ),
+            ],
+          )
+        else
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () =>
+                      Navigator.of(context).popUntil((r) => r.isFirst),
+                  child: const Text('Done'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: documentId == null
+                      ? null
+                      : () => Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => DocumentDetailScreen(
+                              documentId: documentId,
+                              initialData: r,
+                            ),
                           ),
                         ),
-                      ),
-                child: const Text('View & Verify'),
+                  child: const Text('View & Verify'),
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
       ],
     );
   }

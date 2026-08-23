@@ -179,7 +179,15 @@ class TesseractOCR(_PreprocessMixin, OCREngine):
             )
 
     def extract_text(self, image: Image.Image) -> Tuple[str, float]:
-        """Extract text with average confidence (0-1 normalised)."""
+        """
+        Extract text with average confidence (0-1 normalised).
+
+        Reconstructs line and paragraph breaks from Tesseract's word-level
+        layout data (block/par/line numbers) instead of flattening the whole
+        page into a single space-joined string. This matters a great deal
+        for downstream regex-based field extraction (titles, "Label: Value"
+        lines, etc.), which relies on real line boundaries.
+        """
         try:
             image = self._preprocess_image(image)
             # PSM 6 — assume single uniform block of text (ideal for forms/documents)
@@ -190,15 +198,39 @@ class TesseractOCR(_PreprocessMixin, OCREngine):
                 output_type=self.pytesseract.Output.DICT,
             )
 
-            text_parts, confidences = [], []
-            for i, conf in enumerate(data["conf"]):
-                if conf > 0:
-                    text = data["text"][i].strip()
-                    if text:
-                        text_parts.append(text)
-                        confidences.append(conf)
+            confidences = []
+            lines: Dict[Tuple[int, int, int], List[str]] = {}
+            line_order: List[Tuple[int, int, int]] = []
 
-            full_text = " ".join(text_parts)
+            n = len(data["text"])
+            for i in range(n):
+                conf = data["conf"][i]
+                if conf <= 0:
+                    continue
+                word = data["text"][i].strip()
+                if not word:
+                    continue
+                confidences.append(conf)
+
+                line_key = (data["block_num"][i], data["par_num"][i], data["line_num"][i])
+                if line_key not in lines:
+                    lines[line_key] = []
+                    line_order.append(line_key)
+                lines[line_key].append(word)
+
+            # Rebuild text with real line/paragraph breaks so downstream
+            # regex extraction (titles, "Label: Value" lines) can work on
+            # OCR'd images the same way it works on native PDF/DOCX text.
+            text_lines = []
+            last_par_key = None
+            for line_key in line_order:
+                par_key = (line_key[0], line_key[1])
+                if last_par_key is not None and par_key != last_par_key:
+                    text_lines.append("")  # blank line between paragraphs
+                text_lines.append(" ".join(lines[line_key]))
+                last_par_key = par_key
+
+            full_text = "\n".join(text_lines)
             avg_confidence = (
                 sum(confidences) / len(confidences) / 100.0 if confidences else 0.0
             )
@@ -264,13 +296,47 @@ class EasyOCREngine(_PreprocessMixin, OCREngine):
             image = self._preprocess_image(image)
             image_np = np.array(image)
             results = self.reader.readtext(image_np)
+            if not results:
+                return "", 0.0
 
-            text_parts, confidences = [], []
-            for _bbox, text, conf in results:
-                text_parts.append(text)
-                confidences.append(conf)
+            # Reconstruct line breaks from bbox vertical position, since
+            # EasyOCR returns flat (bbox, text, confidence) tuples with no
+            # inherent line grouping. Sort top-to-bottom then left-to-right,
+            # and start a new line whenever the vertical gap between
+            # consecutive words is larger than roughly half a text height.
+            items = []
+            for bbox, text, conf in results:
+                y_coords = [p[1] for p in bbox]
+                x_coords = [p[0] for p in bbox]
+                items.append({
+                    "text": text,
+                    "conf": conf,
+                    "top": min(y_coords),
+                    "left": min(x_coords),
+                    "height": max(y_coords) - min(y_coords),
+                })
+            items.sort(key=lambda it: (it["top"], it["left"]))
 
-            full_text = " ".join(text_parts)
+            lines = []
+            current_line = [items[0]]
+            for it in items[1:]:
+                prev = current_line[-1]
+                threshold = max(prev["height"], it["height"]) * 0.6 or 10
+                if abs(it["top"] - prev["top"]) > threshold:
+                    lines.append(current_line)
+                    current_line = [it]
+                else:
+                    current_line.append(it)
+            lines.append(current_line)
+
+            text_lines = []
+            confidences = []
+            for line in lines:
+                line.sort(key=lambda it: it["left"])
+                text_lines.append(" ".join(it["text"] for it in line))
+                confidences.extend(it["conf"] for it in line)
+
+            full_text = "\n".join(text_lines)
             avg_confidence = (
                 sum(confidences) / len(confidences) if confidences else 0.0
             )
@@ -332,11 +398,48 @@ class OCRProcessor:
         else:
             self.engine = engine
 
+        self._fallback: Optional[OCREngine] = None
+        self._fallback_initialized = False
+
+    def _fallback_engine(self) -> Optional[OCREngine]:
+        """Lazily build a secondary engine to retry with if the primary
+        engine fails or returns unusably little text (e.g. Tesseract
+        binary missing/misconfigured, or a low-quality scan)."""
+        if not self._fallback_initialized:
+            self._fallback_initialized = True
+            try:
+                if isinstance(self.engine, TesseractOCR):
+                    self._fallback = EasyOCREngine()
+                elif isinstance(self.engine, EasyOCREngine):
+                    self._fallback = TesseractOCR()
+            except Exception as e:
+                logger.debug(f"No fallback OCR engine available: {e}")
+                self._fallback = None
+        return self._fallback
+
     def extract_from_image(
         self, image: Image.Image, page_number: int = 1
     ) -> Dict[str, Any]:
-        """Extract text from a single image with metadata."""
+        """Extract text from a single image with metadata.
+
+        Automatically retries with a secondary OCR engine when the primary
+        engine returns empty text or very low confidence, so a missing/
+        misconfigured Tesseract install (or a hard-to-read scan) doesn't
+        silently produce a blank result.
+        """
         text, confidence = self.engine.extract_text(image)
+
+        if not text.strip() or confidence < 0.35:
+            fallback = self._fallback_engine()
+            if fallback is not None:
+                logger.info(
+                    f"Primary OCR engine produced weak result (confidence={confidence:.2f}); "
+                    f"retrying with {type(fallback).__name__}"
+                )
+                fb_text, fb_confidence = fallback.extract_text(image)
+                if fb_text.strip() and (not text.strip() or fb_confidence > confidence):
+                    text, confidence = fb_text, fb_confidence
+
         return {
             "text": text,
             "confidence": confidence,

@@ -188,6 +188,25 @@ class ApiService {
     return response.data as Map<String, dynamic>;
   });
 
+  /// Confirms a staged upload (returned by [processDocument] with
+  /// `status: pending_review`), finalizing it into the RAG index /
+  /// knowledge graph. Call this once the citizen has reviewed the detected
+  /// document type + extracted fields and wants to keep the document.
+  Future<Map<String, dynamic>> confirmDocument(String documentId) =>
+      _guard(() async {
+        final response = await _dio.post('/upload/$documentId/confirm');
+        return response.data as Map<String, dynamic>;
+      });
+
+  /// Discards a staged upload (returned by [processDocument] with
+  /// `status: pending_review`) — e.g. the wrong file was picked or the
+  /// scan quality was too poor. Frees the citizen to upload another file.
+  Future<Map<String, dynamic>> discardDocument(String documentId) =>
+      _guard(() async {
+        final response = await _dio.post('/upload/$documentId/discard');
+        return response.data as Map<String, dynamic>;
+      });
+
   Future<List<dynamic>> listDocuments({String? ownerId, String? status}) =>
       _guard(() async {
         final response = await _dio.get(

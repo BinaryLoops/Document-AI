@@ -41,6 +41,7 @@ class DocumentProcessor:
         self.min_chunk_size = min_chunk_size
         self.max_single_chunk_size = max_single_chunk_size
         self.is_summary_task = False  # Flag for summary tasks
+        self.last_ocr_confidence: Optional[float] = None  # Set when OCR was used
     
     def set_summary_mode(self, enabled: bool = True):
         """
@@ -99,7 +100,7 @@ class DocumentProcessor:
             chunks = [text]
         else:
             # Create base metadata if not provided
-            base_metadata = {"source": os.path.basename(file_path)}
+            base_metadata: Dict[str, Any] = {"source": os.path.basename(file_path)}
             if metadata:
                 base_metadata.update(metadata)
                 
@@ -173,10 +174,15 @@ class DocumentProcessor:
         
         # Create base metadata if not provided
         if 'base_metadata' not in locals():
-            base_metadata = {"source": os.path.basename(file_path)}
+            base_metadata: Dict[str, Any] = {"source": os.path.basename(file_path)}
             if metadata:
                 base_metadata.update(metadata)
-        
+
+        # Surface OCR confidence (image uploads / scanned PDFs) so downstream
+        # evidence tracking and UI can flag low-confidence extractions.
+        if self.last_ocr_confidence is not None:
+            base_metadata["ocr_confidence"] = self.last_ocr_confidence
+
         # Create chunk-specific metadata
         chunk_metadata = []
         for i, chunk in enumerate(chunks):
@@ -306,7 +312,10 @@ class DocumentProcessor:
         """
         _, ext = os.path.splitext(file_path)
         ext = ext.lower()
-        
+
+        # Reset any OCR confidence recorded by a previous call.
+        self.last_ocr_confidence: Optional[float] = None
+
         if ext == '.pdf':
             return self._extract_text_from_pdf(file_path)
         elif ext == '.txt':
@@ -315,8 +324,70 @@ class DocumentProcessor:
             return self._extract_text_from_txt(file_path)
         elif ext == '.docx':
             return self._extract_text_from_docx(file_path)
+        elif ext in ('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.tif'):
+            return self._extract_text_from_image(file_path)
         else:
             raise ValueError(f"Unsupported file format: {ext}")
+
+    def _extract_text_from_image(self, file_path: str) -> str:
+        """
+        Extract text from an image file (JPG/PNG/etc.) via OCR.
+
+        Any certificate submitted as a photo/scan goes through this path,
+        so an image being unreadable here is the most common reason a
+        document "can't be analyzed" at all.
+        """
+        try:
+            from PIL import Image
+            from document.ocr_processor import OCRProcessor
+
+            with Image.open(file_path) as image:
+                image = image.convert("RGB")
+                result = OCRProcessor().extract_from_image(image)
+
+            self.last_ocr_confidence = result["confidence"]
+            logger.info(
+                f"OCR extracted {len(result['text'])} characters from image "
+                f"(confidence={result['confidence']:.2f})"
+            )
+            return result["text"]
+        except Exception as e:
+            logger.error(f"Error running OCR on image {file_path}: {e}")
+            return ""
+
+    def _ocr_pdf_pages(self, file_path: str) -> str:
+        """
+        Rasterize each PDF page and run OCR — used when a PDF has no (or
+        almost no) extractable text layer, i.e. it's a scanned/photographed
+        document saved as PDF rather than a native digital document.
+        """
+        import fitz  # PyMuPDF
+        from PIL import Image
+        from document.ocr_processor import OCRProcessor
+
+        ocr = OCRProcessor()
+        page_texts = []
+        confidences = []
+
+        with fitz.open(file_path) as doc:
+            for page_index, page in enumerate(doc):
+                # Render at ~300 DPI for good OCR accuracy.
+                pixmap = page.get_pixmap(matrix=fitz.Matrix(300 / 72, 300 / 72))
+                image = Image.frombytes(
+                    "RGB", (pixmap.width, pixmap.height), pixmap.samples
+                )
+                result = ocr.extract_from_image(image, page_number=page_index + 1)
+                if result["text"].strip():
+                    page_texts.append(result["text"])
+                    confidences.append(result["confidence"])
+                logger.info(
+                    f"OCR'd scanned PDF page {page_index + 1}/{len(doc)} "
+                    f"(confidence={result['confidence']:.2f})"
+                )
+
+        if confidences:
+            self.last_ocr_confidence = sum(confidences) / len(confidences)
+        return "\n\n".join(page_texts)
     
     def _extract_text_from_pdf(self, file_path: str) -> str:
         """
@@ -329,20 +400,39 @@ class DocumentProcessor:
             Extracted text
         """
         # Try PyMuPDF first if available (better extraction)
+        text = ""
         try:
             import fitz  # PyMuPDF
-            text = ""
             with fitz.open(file_path) as doc:
                 for page in doc:
                     text += page.get_text("text") + "\n\n"
-            
+
             logger.info(f"Extracted {len(text)} characters from PDF using PyMuPDF")
-            return text
         except ImportError:
             logger.info("PyMuPDF not installed, falling back to PyPDF2")
         except Exception as e:
             logger.warning(f"Error using PyMuPDF: {e}, falling back to PyPDF2")
-        
+
+        # PyMuPDF/PyPDF2 only read the text layer of a PDF. A scanned or
+        # photographed certificate saved as PDF has no text layer at all,
+        # so fall back to OCR-ing each rasterized page in that case.
+        if len(text.strip()) < 40:
+            try:
+                ocr_text = self._ocr_pdf_pages(file_path)
+                if len(ocr_text.strip()) > len(text.strip()):
+                    logger.info(
+                        f"PDF text layer was empty/sparse — used OCR fallback "
+                        f"({len(ocr_text)} characters extracted)"
+                    )
+                    return ocr_text
+            except ImportError:
+                logger.info("PyMuPDF not available — cannot OCR scanned PDF pages")
+            except Exception as e:
+                logger.warning(f"OCR fallback for scanned PDF failed: {e}")
+
+        if text.strip():
+            return text
+
         # Fall back to PyPDF2
         try:
             import PyPDF2

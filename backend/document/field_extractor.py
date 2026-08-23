@@ -189,7 +189,28 @@ class FieldExtractor:
                 if m:
                     results[field_name] = m.group(1).strip()
 
-        # ── Clean up noise keys ────────────────────────────────────────
+        # ── Title heuristic ──────────────────────────────────────────
+        # Certificates/forms rarely label their own title as "Title: ...";
+        # it's almost always the first prominent heading line instead
+        # (e.g. "CERTIFICATE OF ACHIEVEMENT", "Birth Certificate"). Pick
+        # the first short, non key:value line near the top of the document.
+        if 'document_title' not in results:
+            for raw_line in text.splitlines()[:8]:
+                candidate = raw_line.strip(' \t.:-')
+                if not (5 <= len(candidate) <= 90):
+                    continue
+                if re.search(r'[:=]', candidate):
+                    continue  # looks like a "Label: Value" line, not a title
+                letters = re.sub(r'[^A-Za-z]', '', candidate)
+                if len(letters) < 4:
+                    continue
+                upper_ratio = sum(1 for c in letters if c.isupper()) / len(letters)
+                is_titlecase = candidate == candidate.title()
+                if upper_ratio > 0.6 or is_titlecase:
+                    results['document_title'] = candidate
+                    break
+
+        # ── Clean up noise keys ──────────────────────────────────────────
         noise = {
             'the', 'and', 'or', 'of', 'to', 'in', 'a', 'an', 'is', 'it',
             'this', 'that', 'for', 'on', 'at', 'by', 'with', 'from',
@@ -334,6 +355,30 @@ class FieldExtractor:
             ],
             'document_title': [
                 r'^([A-Z\s]{5,}(?:FORM|APPLICATION|CERTIFICATE|LICENSE|PERMIT|CARD))$',
+            ],
+            # ── Universal core fields (title/date/author/reference) ────────
+            # These back the generic "Other" schema and any document type
+            # whose specific fields didn't match, so every processed
+            # document gets a best-effort title/date/issuer/reference.
+            'date': [
+                r'(?:^|\s)date\s*[:\-=]\s*(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})',
+                r'\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})\b',
+                r'\b(\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{4})\b',
+            ],
+            'issuing_authority': [
+                r'issu(?:ed|ing)\s+(?:by|authority)\s*[:\-=]?\s*([A-Z][A-Za-z0-9\s&,\.\-]{3,60}?)(?:\n|\.|$)',
+                r'authority\s*[:\-=]\s*([A-Z][A-Za-z0-9\s&,\.\-]{3,60}?)(?:\n|\.|$)',
+                r'(?:this is to certify|certified)\s+.{0,80}?\bby\s+(?:the\s+)?([A-Z][A-Za-z0-9\s&,\.\-]{3,60}?)(?:\n|\.|$)',
+                r'\b([A-Z][A-Za-z\s&]+(?:Ltd|Limited|Pvt|Corporation|Corp|Inc|LLP|Authority|Board|Council|Department|Ministry|University|Ins\w*tute|Commission)\.?)\b',
+            ],
+            'author': [
+                r'(?:author|prepared|written)\s+by\s*[:\-=]?\s*([A-Z][A-Za-z\.\s]{2,40}?)(?:\n|\.|$)',
+                r'issu(?:ed|ing)\s+(?:by|authority)\s*[:\-=]?\s*([A-Z][A-Za-z0-9\s&,\.\-]{3,60}?)(?:\n|\.|$)',
+                r'signed\s+by\s*[:\-=]?\s*([A-Z][A-Za-z\.\s]{2,40}?)(?:\n|\.|$)',
+            ],
+            'reference_number': [
+                r'(?:reference|ref|regd?|registration|certificate|cert|serial|sl|enrolment|enrollment|file|memo)\s*\.?\s*(?:no|number|#)\s*[:\-=]?\s*([A-Z0-9][A-Z0-9\-\/]{3,24})',
+                r'\b([A-Z]{2,6}[\-\/]?\d{4,}[\-\/]?[A-Z0-9]*)\b',
             ],
         }
         

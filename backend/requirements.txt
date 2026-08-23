@@ -45,6 +45,9 @@ openai>=1.0.0
 # Firebase integration (P16)
 firebase-admin>=6.0.0
 
+# Cloudinary file storage
+cloudinary>=1.44.0
+
 # Date extraction (P13)
 python-dateutil>=2.8.2
 datefinder>=0.7.3

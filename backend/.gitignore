@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !.env.template
+firebase-credentials.json
 *firebase*adminsdk*.json
 *serviceAccountKey*.json
 gen_keys/

@@ -92,6 +92,10 @@ async def lifespan(app: FastAPI):
     logger.info("  Host:Port   : %s:%d", settings.api_host, settings.effective_port)
     logger.info("=" * 60)
 
+    from storage.cloudinary_client import validate_cloudinary_config
+    validate_cloudinary_config()
+    logger.info("✓ Cloudinary storage configured")
+
     # ── Load auth store ───────────────────────────────────────────────────
     try:
         from auth.database import load as auth_load

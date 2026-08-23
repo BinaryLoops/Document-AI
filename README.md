@@ -17,6 +17,7 @@ DocuMind AI is a document intelligence platform for government workflows. It com
 - Android device or emulator for the mobile app
 - Tesseract OCR for image document processing
 - Optional: Ollama, Hugging Face, Firebase, Neo4j
+- Cloudinary for document file storage
 
 ## Run The Backend
 
@@ -29,6 +30,18 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 The API is available at `http://localhost:8000`. Interactive documentation is at `http://localhost:8000/docs`.
+
+## Cloudinary File Storage
+
+Firebase Auth and Firestore remain supported, while uploaded files are stored in Cloudinary. Add these values to the local `backend/.env` file:
+
+```env
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+```
+
+The upload endpoint remains `POST /upload` with multipart field `file`. It accepts PDF, JPG, JPEG, PNG, DOCX, and TXT files up to 20 MB and returns a Cloudinary URL and public ID. Firebase service-account credentials are still required separately if Firestore persistence is enabled.
 
 The backend starts in degraded mode when optional Firebase, Ollama, or Hugging Face services are not configured. Local rule-based LLM fallback remains available.
 

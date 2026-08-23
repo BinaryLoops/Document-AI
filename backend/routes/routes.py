@@ -17,9 +17,12 @@ from PIL import Image
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Optional Firebase import
+_MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+_ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".docx", ".txt"}
+
+# Optional Firebase import (Auth/Firestore remain unchanged)
 try:
-    from storage.firebase_client import get_db, get_bucket
+    from storage.firebase_client import get_db
     FIREBASE_AVAILABLE = True
     logger.info("Firebase client available")
 except ImportError:
@@ -29,6 +32,7 @@ except ImportError:
 from document.ocr_processor import extract_text_from_image
 from document.document_classifier import DocumentClassifier
 from document.field_extractor import FieldExtractor
+from storage.cloudinary_client import upload_bytes
 
 # Knowledge graph singleton
 try:
@@ -191,6 +195,13 @@ class RAGAPIRouter:
                 content = await file.read()
                 ext = os.path.splitext(file.filename)[1].lower()
 
+                if not content:
+                  raise HTTPException(status_code=400, detail="No file uploaded")
+                if len(content) > _MAX_UPLOAD_BYTES:
+                  raise HTTPException(status_code=413, detail="File too large")
+                if ext not in _ALLOWED_EXTENSIONS:
+                  raise HTTPException(status_code=400, detail="Unsupported file type")
+
                 if doc_ref:
                     try:
                         doc_ref.set({
@@ -202,14 +213,26 @@ class RAGAPIRouter:
                     except Exception:
                         pass
 
-                if FIREBASE_AVAILABLE and doc_ref:
-                    try:
-                        bucket = get_bucket()
-                        blob = bucket.blob(f"originals/{doc_id}{ext}")
-                        blob.upload_from_string(content)
-                        _fb_update({"storage_path": blob.name, "status": "PROCESSING"})
-                    except Exception:
-                        pass
+                logger.info("Document upload started: %s", file.filename)
+                try:
+                  cloudinary_file = upload_bytes(
+                    content,
+                    public_id=doc_id,
+                    filename=file.filename or f"{doc_id}{ext}",
+                  )
+                except Exception as upload_error:
+                  logger.error("Cloudinary upload failed: %s", upload_error, exc_info=True)
+                  raise HTTPException(status_code=500, detail="Cloudinary upload failed")
+                _fb_update({
+                  "fileUrl": cloudinary_file["fileUrl"],
+                  "publicId": cloudinary_file["publicId"],
+                  "uploadedAt": datetime.datetime.utcnow(),
+                  "fileType": file.content_type or ext.lstrip("."),
+                  "size": cloudinary_file["bytes"],
+                  "resourceType": cloudinary_file["resourceType"],
+                  "status": "PROCESSING",
+                })
+                logger.info("Document upload completed: %s", file.filename)
 
                 with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
                     tmp.write(content)
@@ -309,6 +332,9 @@ class RAGAPIRouter:
                     _fb_update({"status": "COMPLETED"})
 
                     return {
+                      "success": True,
+                      "url": cloudinary_file["fileUrl"],
+                      "publicId": cloudinary_file["publicId"],
                         "status": "success",
                         "message": f"Processed document into {len(chunks)} chunks",
                         "document_id": doc_id,
@@ -321,13 +347,17 @@ class RAGAPIRouter:
                             time.time() - start_time, 2
                         ),
                         "firebase_enabled": FIREBASE_AVAILABLE,
+                        "file_url": cloudinary_file["fileUrl"],
+                        "public_id": cloudinary_file["publicId"],
+                        "file_type": cloudinary_file["format"],
+                        "file_size": cloudinary_file["bytes"],
                         "knowledge_graph": kg_stats,
                     }
                 finally:
                     os.unlink(temp_path)
 
             except Exception as e:
-                logger.error(f"Error processing document: {e}")
+                logger.error("Document upload failed: %s", e, exc_info=True)
                 _fb_update({"status": "FAILED", "error": str(e)})
                 raise HTTPException(
                     status_code=500,

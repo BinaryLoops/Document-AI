@@ -23,15 +23,23 @@ class StorageService {
   }
 
   // ---- Tokens ----
-  Future<void> saveTokens({required String accessToken, String? refreshToken}) async {
+  Future<void> saveTokens({
+    required String accessToken,
+    String? refreshToken,
+  }) async {
     await _secure.write(key: AppConstants.keyAccessToken, value: accessToken);
     if (refreshToken != null) {
-      await _secure.write(key: AppConstants.keyRefreshToken, value: refreshToken);
+      await _secure.write(
+        key: AppConstants.keyRefreshToken,
+        value: refreshToken,
+      );
     }
   }
 
-  Future<String?> getAccessToken() => _secure.read(key: AppConstants.keyAccessToken);
-  Future<String?> getRefreshToken() => _secure.read(key: AppConstants.keyRefreshToken);
+  Future<String?> getAccessToken() =>
+      _secure.read(key: AppConstants.keyAccessToken);
+  Future<String?> getRefreshToken() =>
+      _secure.read(key: AppConstants.keyRefreshToken);
 
   Future<void> clearTokens() async {
     await _secure.delete(key: AppConstants.keyAccessToken);
@@ -77,5 +85,30 @@ class StorageService {
   Future<String?> getThemeMode() async {
     final prefs = await _preferences;
     return prefs.getString(AppConstants.keyThemeMode);
+  }
+
+  Future<void> saveLocalDocument(Map<String, dynamic> document) async {
+    final prefs = await _preferences;
+    final documents = await getLocalDocuments();
+    documents.removeWhere(
+      (item) => item['document_id'] == document['document_id'],
+    );
+    documents.insert(0, document);
+    await prefs.setString(
+      AppConstants.keyLocalDocuments,
+      jsonEncode(documents.take(100).toList()),
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getLocalDocuments() async {
+    final prefs = await _preferences;
+    final raw = prefs.getString(AppConstants.keyLocalDocuments);
+    if (raw == null) return [];
+    final decoded = jsonDecode(raw) as List?;
+    return decoded
+            ?.whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList() ??
+        [];
   }
 }

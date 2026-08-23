@@ -15,8 +15,10 @@ class AppConstants {
   ///   flutter run --dart-define=API_BASE_URL=http://192.168.1.10:8000
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'http://10.73.193.86:8000',
   );
+
+  static const String offlineDemoToken = 'offline-demo-session';
 
   static const Duration apiConnectTimeout = Duration(seconds: 15);
   static const Duration apiReceiveTimeout = Duration(seconds: 30);
@@ -28,6 +30,7 @@ class AppConstants {
   static const String keyUserRole = 'user_role';
   static const String keyUserProfile = 'user_profile';
   static const String keyThemeMode = 'theme_mode';
+  static const String keyLocalDocuments = 'local_documents';
 
   // Offline queue
   static const String offlineQueueBox = 'offline_queue.db';

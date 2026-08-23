@@ -1,0 +1,101 @@
+[32m2026-08-23 08:59:01 INFO    [0m main - ✓ Loaded environment variables from C:\Users\mruni\Downloads\SIH-main (1)\DocuMind-AI-SIH\backend\.env
+[32m2026-08-23 08:59:02 INFO    [0m security.middleware - Security middleware installed: rate=120 rpm, csrf=False, session=30 min
+[32m2026-08-23 08:59:02 INFO    [0m main - ✓ Prometheus metrics exposed at /metrics
+[32m2026-08-23 08:59:02 INFO    [0m main - ============================================================
+[32m2026-08-23 08:59:02 INFO    [0m main -   DocuMind AI v1.0.0 — starting up
+[32m2026-08-23 08:59:02 INFO    [0m main -   Environment : development
+[32m2026-08-23 08:59:02 INFO    [0m main -   Host:Port   : 0.0.0.0:8000
+[32m2026-08-23 08:59:02 INFO    [0m main - ============================================================
+[32m2026-08-23 08:59:02 INFO    [0m main - ✓ Cloudinary storage configured
+[32m2026-08-23 08:59:02 INFO    [0m auth.database - Auth store loaded: 4 users, 14 sessions, 7 devices
+[32m2026-08-23 08:59:02 INFO    [0m main - ✓ Auth store loaded
+[32m2026-08-23 08:59:02 INFO    [0m main - ✓ Auth routes registered (/auth/*)
+[32m2026-08-23 08:59:02 INFO    [0m digilocker.database - DocumentDatabase initialised at C:\Users\mruni\Downloads\SIH-main (1)\DocuMind-AI-SIH\backend\digilocker.db
+[32m2026-08-23 08:59:02 INFO    [0m digilocker.vault - FileVault initialised at C:\Users\mruni\Downloads\SIH-main (1)\DocuMind-AI-SIH\backend\vault
+[32m2026-08-23 08:59:02 INFO    [0m digilocker.encryption - AES-256 encryptor initialised with provided master key
+[32m2026-08-23 08:59:02 INFO    [0m digilocker.scanner - Using MockScanner (set MALWARE_SCANNER=clamav for production)
+[32m2026-08-23 08:59:02 INFO    [0m main - ✓ Digital Locker ready (/documents/*)
+[32m2026-08-23 08:59:03 INFO    [0m verification_engine.database - VerificationDatabase initialised at C:\Users\mruni\Downloads\SIH-main (1)\DocuMind-AI-SIH\backend\verification.db
+[32m2026-08-23 08:59:03 INFO    [0m main - ✓ Verification Engine ready (/verify/*)
+[32m2026-08-23 08:59:03 INFO    [0m main - ✓ AI Intelligence Engine ready (/ai/*, /assistant/*)
+[32m2026-08-23 08:59:03 INFO    [0m generation.database - Generation store loaded: 102 requests, 102 documents
+[32m2026-08-23 08:59:03 INFO    [0m main - ✓ Document Generation Engine ready (/generate/*, /generated/*)
+[32m2026-08-23 08:59:07 INFO    [0m main - ✓ Government Knowledge Graph ready (/graph/*)
+[32m2026-08-23 08:59:07 INFO    [0m tracking.database - Tracking database initialized: tracking.db
+[32m2026-08-23 08:59:07 INFO    [0m main - ✓ Tracking & Notifications ready (/tracking/*, /notifications/*)
+[32m2026-08-23 08:59:07 INFO    [0m security.audit - Audit database initialized: audit.db
+[32m2026-08-23 08:59:07 INFO    [0m main - ✓ Enterprise Security ready (/security/*)
+[32m2026-08-23 08:59:07 INFO    [0m main - Running startup diagnostics …
+[32m2026-08-23 08:59:07 INFO    [0m core.diagnostics -   ✓ [python_version        ] Python 3.11.9
+[32m2026-08-23 08:59:07 INFO    [0m core.diagnostics -   ✓ [env_file              ] .env file found
+[33m2026-08-23 08:59:07 WARNING [0m core.diagnostics -   ⚠ [env_vars              ] 1 recommended env var(s) not set — HUGGINGFACE_API_KEY
+[32m2026-08-23 08:59:07 INFO    [0m core.diagnostics -   ✓ [faiss                 ] faiss-cpu importable
+[32m2026-08-23 08:59:13 INFO    [0m core.diagnostics -   ✓ [sentence_transformers ] sentence-transformers importable
+[32m2026-08-23 08:59:13 INFO    [0m core.diagnostics -   ✓ [tesseract             ] Tesseract binary found: C:\Program Files\Tesseract-OCR\tesseract.exe
+[33m2026-08-23 08:59:17 WARNING [0m core.diagnostics -   ⚠ [ollama                ] Ollama not running — will use HuggingFace fallback
+[32m2026-08-23 08:59:17 INFO    [0m core.diagnostics -   ✓ [spacy                 ] spaCy + en_core_web_sm available
+[33m2026-08-23 08:59:17 WARNING [0m core.diagnostics -   ⚠ [firebase              ] firebase-admin not installed — No module named 'firebase_admin'
+[32m2026-08-23 08:59:17 INFO    [0m core.diagnostics -   ○ [neo4j                 ] NEO4J_URI / NEO4J_PASSWORD not set — using in-memory KG
+[32m2026-08-23 08:59:17 INFO    [0m core.diagnostics -   ✓ [disk_space            ] Disk space: 165.5 GB free
+[33m2026-08-23 08:59:17 WARNING [0m routes.routes - Firebase not available - some features will be limited
+[32m2026-08-23 08:59:17 INFO    [0m routes.routes - Knowledge graph manager loaded
+[32m2026-08-23 08:59:17 INFO    [0m routes.routes - Intelligence engines loaded
+[32m2026-08-23 08:59:17 INFO    [0m core.diagnostics -   ✓ [routes_module         ] routes.routes importable
+[32m2026-08-23 08:59:17 INFO    [0m core.diagnostics - Startup diagnostics complete in 10385 ms: ok=8 warn=3 fail=0 skip=1
+[32m2026-08-23 08:59:17 INFO    [0m main - Diagnostics complete: ok=8 warn=3 fail=0 skip=1
+[32m2026-08-23 08:59:17 INFO    [0m main - Step 1/4 — Creating embedding model (sentence-transformers/all-MiniLM-L6-v2) …
+[32m2026-08-23 08:59:17 INFO    [0m embedding.model - Loading SentenceTransformer model: sentence-transformers/all-MiniLM-L6-v2 on cpu
+[33m2026-08-23 08:59:18 WARNING [0m huggingface_hub.utils._http - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[32m2026-08-23 08:59:26 INFO    [0m embedding.model - Model loaded successfully. Embedding dimension: 384
+[32m2026-08-23 08:59:26 INFO    [0m main - ✓ Embedding model ready (dim=384)
+[32m2026-08-23 08:59:26 INFO    [0m main - Step 2/4 — Creating FAISS vector database …
+[32m2026-08-23 08:59:26 INFO    [0m main - ✓ FAISS vector database ready
+[32m2026-08-23 08:59:26 INFO    [0m main - Step 3/4 — Initialising LLM …
+[31m2026-08-23 08:59:30 ERROR   [0m llm.ollama_model - ❌ Ollama not available: HTTPConnectionPool(host='localhost', port=11434): Max retries exceeded with url: /api/tags (Caused by ConnectTimeoutError(<HTTPConnection(host='localhost', port=11434) at 0x1a08a9afb50>, 'Connection to localhost timed out. (connect timeout=2)'))
+[31m2026-08-23 08:59:30 ERROR   [0m llm.ollama_model - Install from: https://ollama.ai
+[32m2026-08-23 08:59:30 INFO    [0m main - Ollama not available (Ollama not available) — trying HuggingFace …
+[32m2026-08-23 08:59:30 INFO    [0m main - HUGGINGFACE_API_KEY not set — install Ollama for free local LLM: https://ollama.ai
+[33m2026-08-23 08:59:30 WARNING [0m main - ✓ LLM: LocalLLM (rule-based fallback — answers may be limited). Set HUGGINGFACE_API_KEY or install Ollama for better results.
+[32m2026-08-23 08:59:30 INFO    [0m main - Step 4/4 — Creating RAG engine …
+[32m2026-08-23 08:59:30 INFO    [0m main - ✓ RAG engine ready
+[32m2026-08-23 08:59:30 INFO    [0m main - Registering API routes …
+[32m2026-08-23 08:59:30 INFO    [0m embedding.model - Loading SentenceTransformer model: sentence-transformers/all-MiniLM-L6-v2 on cpu
+[32m2026-08-23 08:59:38 INFO    [0m embedding.model - Model loaded successfully. Embedding dimension: 384
+[32m2026-08-23 08:59:38 INFO    [0m document.document_classifier - Precomputing document type embeddings...
+[32m2026-08-23 08:59:39 INFO    [0m document.document_classifier - Classifier ready with 10 document types
+[32m2026-08-23 08:59:39 INFO    [0m main - ✓ API routes registered
+[32m2026-08-23 08:59:39 INFO    [0m main - ✓ DocuMind AI is ready (startup took 36.7s)
+[32m2026-08-23 08:59:39 INFO    [0m main -   API docs: http://0.0.0.0:8000/docs
+[32m2026-08-23 08:59:41 INFO    [0m knowledge_graph.extractor [9b985d27-af41-4adc-b81f-e6549899f06c] - Loaded spaCy model: en_core_web_sm
+[32m2026-08-23 08:59:41 INFO    [0m knowledge_graph.kg_manager [9b985d27-af41-4adc-b81f-e6549899f06c] - KnowledgeGraphExtractor initialised
+[32m2026-08-23 08:59:41 INFO    [0m knowledge_graph.kg_manager [9b985d27-af41-4adc-b81f-e6549899f06c] - KG loaded from kg_store.json — entities=18, relations=22
+[32m2026-08-23 08:59:41 INFO    [0m core.middleware [9b985d27-af41-4adc-b81f-e6549899f06c] - GET /status 200 392ms rid=9b985d27-af41-4adc-b81f-e6549899f06c
+INFO:     127.0.0.1:62601 - "GET /status HTTP/1.1" 200 OK
+[32m2026-08-23 08:59:51 INFO    [0m routes.routes [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Document upload started: test_generated_passport.pdf
+[32m2026-08-23 08:59:58 INFO    [0m routes.routes [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Document upload completed: test_generated_passport.pdf
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Processing document: C:\Users\mruni\AppData\Local\Temp\tmpudbj2bhh.pdf
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - PyMuPDF not installed, falling back to PyPDF2
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - PDF has 2 pages
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Extracted 1123 characters from PDF using PyPDF2
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Extracted and preprocessed text, total length: 1107 characters
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Small document (1107 chars), using whole document
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Created 1 chunks from document
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Average chunk size: 1107.0 characters
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Smallest chunk: 1107 characters, Largest chunk: 1107 characters
+[32m2026-08-23 08:59:58 INFO    [0m document.processor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Summary mode disabled
+[32m2026-08-23 08:59:58 INFO    [0m document.document_classifier [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Classified as 'Identity Proof' with confidence 0.372
+[32m2026-08-23 08:59:58 INFO    [0m document.field_extractor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Extracted document_number: IND-PP-2026-000002
+[32m2026-08-23 08:59:58 INFO    [0m document.field_extractor [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Extracted 12 fields from Identity Proof
+[32m2026-08-23 08:59:58 INFO    [0m rag.engine [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Adding 1 documents to database
+[32m2026-08-23 08:59:58 INFO    [0m rag.engine [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - First document sample: GOVERNMENT OF INDIA
+ 
+ PASSPORT
+ Ministry of External Affairs, Government of India
+ Document No: IND...
+[32m2026-08-23 08:59:58 INFO    [0m rag.engine [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Generating embeddings for batch 1/1
+[32m2026-08-23 08:59:58 INFO    [0m rag.engine [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - Added 1 documents to database
+[32m2026-08-23 08:59:58 INFO    [0m knowledge_graph.kg_manager [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - KG build done — entities=18, relations=22
+[32m2026-08-23 08:59:58 INFO    [0m core.middleware [b9405812-d15d-4160-84e2-8f1ec7a37a4c] - POST /upload 200 6889ms rid=b9405812-d15d-4160-84e2-8f1ec7a37a4c
+INFO:     127.0.0.1:62611 - "POST /upload HTTP/1.1" 200 OK
+[32m2026-08-23 09:00:09 INFO    [0m core.middleware [490ffd8e-2ffa-478f-9f86-192eeeb252db] - GET /documents/7273072f-d449-46ea-9900-b54daccf32fe 404 2ms rid=490ffd8e-2ffa-478f-9f86-192eeeb252db
+INFO:     127.0.0.1:62634 - "GET /documents/7273072f-d449-46ea-9900-b54daccf32fe HTTP/1.1" 404 Not Found

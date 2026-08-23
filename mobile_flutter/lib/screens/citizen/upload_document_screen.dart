@@ -8,13 +8,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../../services/api_service.dart';
+import '../../services/storage_service.dart';
 import '../../widgets/common_widgets.dart';
 import 'document_detail_screen.dart';
 
 /// Upload flow (Phase 3 continuation + Phase 4/5/6 integration):
 /// takes either freshly scanned pages or a manually picked file, silently
 /// compresses/merges them, uploads to `/documents/upload`, then shows the
-/// OCR + AI classification result returned by the backend.
+/// OCR and trained document-classification result returned by the backend.
 class UploadDocumentScreen extends StatefulWidget {
   final List<File>? scannedPages;
   const UploadDocumentScreen({super.key, this.scannedPages});
@@ -80,10 +81,15 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
           final compressed = await _compress(page);
           final bytes = await compressed.readAsBytes();
           final image = pw.MemoryImage(bytes);
-          doc.addPage(pw.Page(build: (context) => pw.Center(child: pw.Image(image))));
+          doc.addPage(
+            pw.Page(build: (context) => pw.Center(child: pw.Image(image))),
+          );
         }
         final dir = await getApplicationDocumentsDirectory();
-        final outPath = p.join(dir.path, 'scan_${DateTime.now().millisecondsSinceEpoch}.pdf');
+        final outPath = p.join(
+          dir.path,
+          'scan_${DateTime.now().millisecondsSinceEpoch}.pdf',
+        );
         final outFile = File(outPath);
         await outFile.writeAsBytes(await doc.save());
         setState(() => _pickedFile = outFile);
@@ -102,7 +108,9 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
     final bytes = await original.readAsBytes();
     final decoded = img.decodeImage(bytes);
     if (decoded == null) return original;
-    final resized = decoded.width > 1600 ? img.copyResize(decoded, width: 1600) : decoded;
+    final resized = decoded.width > 1600
+        ? img.copyResize(decoded, width: 1600)
+        : decoded;
     final jpg = img.encodeJpg(resized, quality: 82);
     final out = File('${original.path}_c.jpg');
     await out.writeAsBytes(jpg);
@@ -119,12 +127,22 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
     });
     try {
       setState(() {
-        _stageLabel = 'Running OCR + AI classification...';
+        _stageLabel = 'Running OCR + document classification...';
         _progressStage = 0.7;
       });
-      final result = await ApiService.instance.uploadDocument(file: _pickedFile!, category: _category);
+      final result = await ApiService.instance.processDocument(_pickedFile!);
+      final suggested = _categoryForDocumentType(
+        result['document_type']?.toString(),
+      );
+      await StorageService.instance.saveLocalDocument({
+        ...result,
+        'filename': p.basename(_pickedFile!.path),
+        'uploaded_at': DateTime.now().toIso8601String(),
+        if (suggested != null) 'category': suggested,
+      });
       setState(() {
         _result = result;
+        if (suggested != null) _category = suggested;
         _progressStage = 1;
       });
     } catch (e) {
@@ -132,6 +150,27 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
     } finally {
       setState(() => _uploading = false);
     }
+  }
+
+  String? _categoryForDocumentType(String? documentType) {
+    if (documentType == null) return null;
+    final normalized = documentType.toLowerCase();
+    if (normalized.contains('identity') || normalized.contains('passport')) {
+      return 'Identity Proof';
+    }
+    if (normalized.contains('address')) {
+      return 'Address Proof';
+    }
+    if (normalized.contains('certificate')) {
+      return 'Certificate';
+    }
+    if (normalized.contains('affidavit')) {
+      return 'Affidavit';
+    }
+    if (normalized.contains('application')) {
+      return 'Application';
+    }
+    return 'Other';
   }
 
   @override
@@ -145,7 +184,8 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (_pickedFile == null) _buildPicker(context),
-              if (_pickedFile != null && _result == null && !_uploading) _buildReadyToUpload(context),
+              if (_pickedFile != null && _result == null && !_uploading)
+                _buildReadyToUpload(context),
               if (_uploading) _buildProgress(context),
               if (_error != null) _buildError(context),
               if (_result != null) _buildResult(context),
@@ -161,12 +201,24 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
       onTap: _pickFile,
       child: Column(
         children: [
-          Icon(Icons.upload_file_rounded, size: 56, color: Theme.of(context).colorScheme.primary),
+          Icon(
+            Icons.upload_file_rounded,
+            size: 56,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(height: 12),
-          const Text('Tap to select a document', style: TextStyle(fontWeight: FontWeight.w600)),
+          const Text(
+            'Tap to select a document',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(height: 4),
-          Text('PDF, PNG, JPG, DOCX, TXT',
-              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
+          Text(
+            'PDF, PNG, JPG, DOCX, TXT',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
@@ -179,7 +231,10 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
         Card(
           child: ListTile(
             leading: const Icon(Icons.insert_drive_file_rounded),
-            title: Text(p.basename(_pickedFile!.path), overflow: TextOverflow.ellipsis),
+            title: Text(
+              p.basename(_pickedFile!.path),
+              overflow: TextOverflow.ellipsis,
+            ),
             trailing: IconButton(
               icon: const Icon(Icons.close),
               onPressed: () => setState(() => _pickedFile = null),
@@ -187,16 +242,29 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        const Text('Document Category', style: TextStyle(fontWeight: FontWeight.w600)),
+        const Text(
+          'Document Category',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 8),
+        if (_result == null)
+          Text(
+            'Choose a category, or let document classification suggest one after processing.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         Wrap(
           spacing: 8,
           children: _categories
-              .map((c) => ChoiceChip(
-                    label: Text(c),
-                    selected: _category == c,
-                    onSelected: (_) => setState(() => _category = c),
-                  ))
+              .map(
+                (c) => ChoiceChip(
+                  label: Text(c),
+                  selected: _category == c,
+                  onSelected: (_) => setState(() => _category = c),
+                ),
+              )
               .toList(),
         ),
         const SizedBox(height: 20),
@@ -215,9 +283,14 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            LinearProgressIndicator(value: _progressStage == 0 ? null : _progressStage),
+            LinearProgressIndicator(
+              value: _progressStage == 0 ? null : _progressStage,
+            ),
             const SizedBox(height: 14),
-            Text(_stageLabel, style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(
+              _stageLabel,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ],
         ),
       ),
@@ -231,7 +304,10 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: Theme.of(context).colorScheme.error),
+            Icon(
+              Icons.error_outline_rounded,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(width: 10),
             Expanded(child: Text(_error!)),
           ],
@@ -250,14 +326,17 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
             children: [
               const Icon(Icons.cloud_off_rounded, color: Colors.orange),
               const SizedBox(width: 12),
-              Expanded(child: Text(r['message']?.toString() ?? 'Upload queued.')),
+              Expanded(
+                child: Text(r['message']?.toString() ?? 'Upload queued.'),
+              ),
             ],
           ),
         ),
       );
     }
     final docType = r['document_type']?.toString() ?? 'Document';
-    final confidence = (r['classification_confidence'] as num?)?.toDouble() ?? 0.0;
+    final confidence =
+        (r['classification_confidence'] as num?)?.toDouble() ?? 0.0;
     final fields = (r['extracted_fields'] as List?) ?? [];
     final documentId = (r['document_id'] ?? r['id'])?.toString();
 
@@ -270,15 +349,24 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Colors.green,
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Processed Successfully', style: TextStyle(fontWeight: FontWeight.w700)),
-                      Text('Classified as "$docType" (${(confidence * 100).toStringAsFixed(0)}% confidence)',
-                          style: const TextStyle(fontSize: 12.5)),
+                      const Text(
+                        'Processed Successfully',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      Text(
+                        'Classified as "$docType" (${(confidence * 100).toStringAsFixed(0)}% confidence)',
+                        style: const TextStyle(fontSize: 12.5),
+                      ),
                     ],
                   ),
                 ),
@@ -287,23 +375,36 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
           ),
         ),
         if (fields.isNotEmpty) ...[
-          const SectionHeader(title: 'Extracted Fields'),
-          ...fields.take(6).map((f) => Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  dense: true,
-                  title: Text(f['field']?.toString().replaceAll('_', ' ').toUpperCase() ?? ''),
-                  subtitle: Text(f['value']?.toString() ?? '—'),
-                  trailing: Text('${(((f['confidence'] as num?) ?? 0) * 100).toStringAsFixed(0)}%'),
+          SectionHeader(title: 'Extracted Fields'),
+          ...fields
+              .take(6)
+              .map(
+                (f) => Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    dense: true,
+                    title: Text(
+                      f['field']
+                              ?.toString()
+                              .replaceAll('_', ' ')
+                              .toUpperCase() ??
+                          '',
+                    ),
+                    subtitle: Text(f['value']?.toString() ?? '—'),
+                    trailing: Text(
+                      '${(((f['confidence'] as num?) ?? 0) * 100).toStringAsFixed(0)}%',
+                    ),
+                  ),
                 ),
-              )),
+              ),
         ],
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: OutlinedButton(
-                onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+                onPressed: () =>
+                    Navigator.of(context).popUntil((r) => r.isFirst),
                 child: const Text('Done'),
               ),
             ),
@@ -312,8 +413,14 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
               child: FilledButton(
                 onPressed: documentId == null
                     ? null
-                    : () => Navigator.of(context).pushReplacement(MaterialPageRoute(
-                        builder: (_) => DocumentDetailScreen(documentId: documentId, initialData: r))),
+                    : () => Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => DocumentDetailScreen(
+                            documentId: documentId,
+                            initialData: r,
+                          ),
+                        ),
+                      ),
                 child: const Text('View & Verify'),
               ),
             ),
@@ -339,7 +446,10 @@ class DottedBox extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 48),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Theme.of(context).colorScheme.outline, width: 1.4),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline,
+            width: 1.4,
+          ),
         ),
         child: child,
       ),

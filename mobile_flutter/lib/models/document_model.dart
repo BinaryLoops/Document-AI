@@ -29,22 +29,41 @@ class DocumentModel {
   factory DocumentModel.fromJson(Map<String, dynamic> json) {
     return DocumentModel(
       id: (json['document_id'] ?? json['id'] ?? '').toString(),
-      filename: (json['filename'] ?? json['file_name'] ?? 'Document').toString(),
-      category: json['category']?.toString() ?? json['document_type']?.toString(),
+      filename: (json['filename'] ?? json['file_name'] ?? 'Document')
+          .toString(),
+      category:
+          json['category']?.toString() ?? json['document_type']?.toString(),
       status: (json['status'] ?? 'uploaded').toString(),
       trustBadge: TrustBadgeX.fromString(json['trust_badge']?.toString()),
-      classificationConfidence: (json['classification_confidence'] as num?)?.toDouble(),
+      classificationConfidence: (json['classification_confidence'] as num?)
+          ?.toDouble(),
       uploadedAt: json['uploaded_at'] != null
           ? DateTime.tryParse(json['uploaded_at'].toString())
-          : (json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null),
+          : (json['created_at'] != null
+                ? DateTime.tryParse(json['created_at'].toString())
+                : null),
       ownerId: json['owner_id']?.toString() ?? json['owner']?.toString(),
-      extractedFields: (json['extracted_fields'] as List?)
+      extractedFields:
+          (json['extracted_fields'] as List?)
               ?.map((e) => ExtractedField.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
       thumbnailUrl: json['thumbnail_url']?.toString(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+    'document_id': id,
+    'filename': filename,
+    'category': category,
+    'document_type': category,
+    'status': status,
+    'classification_confidence': classificationConfidence,
+    'uploaded_at': uploadedAt?.toIso8601String(),
+    'owner_id': ownerId,
+    'extracted_fields': extractedFields.map((field) => field.toJson()).toList(),
+    'thumbnail_url': thumbnailUrl,
+  };
 }
 
 class ExtractedField {
@@ -61,11 +80,18 @@ class ExtractedField {
   });
 
   factory ExtractedField.fromJson(Map<String, dynamic> json) => ExtractedField(
-        field: (json['field'] ?? '').toString(),
-        value: json['value']?.toString(),
-        confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
-        evidenceSnippet: (json['evidence'] is Map)
-            ? (json['evidence']['evidence_snippet']?.toString())
-            : json['evidence_snippet']?.toString(),
-      );
+    field: (json['field'] ?? '').toString(),
+    value: json['value']?.toString(),
+    confidence: (json['confidence'] as num?)?.toDouble() ?? 0.0,
+    evidenceSnippet: (json['evidence'] is Map)
+        ? (json['evidence']['evidence_snippet']?.toString())
+        : json['evidence_snippet']?.toString(),
+  );
+
+  Map<String, dynamic> toJson() => {
+    'field': field,
+    'value': value,
+    'confidence': confidence,
+    'evidence_snippet': evidenceSnippet,
+  };
 }

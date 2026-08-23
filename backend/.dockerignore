@@ -1,0 +1,59 @@
+# Version control
+.git/
+.gitignore
+.github/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+.venv*/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local runtime data (created fresh in the container)
+*.db
+*.db-shm
+*.db-wal
+auth_store.json
+gen_store.json
+kg_store.json
+vault/
+gen_keys/
+generated_pdfs/
+logs/
+*.log
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+!.env.template
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Docs & non-runtime assets (kept out of the image to reduce size)
+*.md
+!README.md
+.devcontainer/
+.kiro/
+tests/
+*.png
+*.jpg
+*.jpeg
+test_*.py
+test_*.pdf
+test_*.ps1
+test.txt
+
+# Frontend (not part of this image)
+front-end/

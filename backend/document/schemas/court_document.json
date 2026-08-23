@@ -1,0 +1,66 @@
+{
+  "document_type": "Court Document",
+  "description": "Court orders, judgments, summons, petitions, legal proceedings",
+  "fields": [
+    {
+      "name": "case_number",
+      "type": "string",
+      "description": "Court case number or reference",
+      "required": true
+    },
+    {
+      "name": "court_name",
+      "type": "string",
+      "description": "Name of the court",
+      "required": true
+    },
+    {
+      "name": "document_type_specific",
+      "type": "string",
+      "description": "Type of court document (Order, Judgment, Summons, Petition, etc.)",
+      "required": true
+    },
+    {
+      "name": "date_filed",
+      "type": "date",
+      "description": "Date when document was filed",
+      "required": true
+    },
+    {
+      "name": "plaintiff",
+      "type": "string",
+      "description": "Name of plaintiff/petitioner",
+      "required": false
+    },
+    {
+      "name": "defendant",
+      "type": "string",
+      "description": "Name of defendant/respondent",
+      "required": false
+    },
+    {
+      "name": "judge_name",
+      "type": "string",
+      "description": "Name of presiding judge",
+      "required": false
+    },
+    {
+      "name": "advocate_name",
+      "type": "string",
+      "description": "Name of advocate/lawyer",
+      "required": false
+    },
+    {
+      "name": "hearing_date",
+      "type": "date",
+      "description": "Date of hearing",
+      "required": false
+    },
+    {
+      "name": "judgment_date",
+      "type": "date",
+      "description": "Date of judgment if applicable",
+      "required": false
+    }
+  ]
+}

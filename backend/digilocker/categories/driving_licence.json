@@ -1,0 +1,21 @@
+{
+  "category": "driving_licence",
+  "display_name": "Driving Licence",
+  "department": "Regional Transport Office",
+  "description": "Driving licence issued by the Regional Transport Office (RTO)",
+  "fields": [
+    {"name": "dl_number", "label": "DL Number", "type": "string", "required": true},
+    {"name": "name", "label": "Full Name", "type": "string", "required": true},
+    {"name": "son_daughter_wife_of", "label": "S/D/W of", "type": "string", "required": false},
+    {"name": "date_of_birth", "label": "Date of Birth", "type": "date", "required": true},
+    {"name": "blood_group", "label": "Blood Group", "type": "string", "required": false},
+    {"name": "address", "label": "Address", "type": "string", "required": true},
+    {"name": "date_of_issue", "label": "Date of Issue", "type": "date", "required": true},
+    {"name": "validity_non_transport", "label": "Validity (Non-Transport)", "type": "date", "required": false},
+    {"name": "validity_transport", "label": "Validity (Transport)", "type": "date", "required": false},
+    {"name": "vehicle_class", "label": "Vehicle Class(es)", "type": "array", "required": true},
+    {"name": "issuing_authority", "label": "Issuing Authority / RTO", "type": "string", "required": false},
+    {"name": "badge_number", "label": "Badge Number", "type": "string", "required": false}
+  ],
+  "keywords": ["driving licence", "driver license", "DL", "RTO", "motor vehicle", "vehicle class", "LMV", "HMV"]
+}

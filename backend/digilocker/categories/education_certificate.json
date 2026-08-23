@@ -1,0 +1,21 @@
+{
+  "category": "education_certificate",
+  "display_name": "Education Certificate",
+  "department": "Board of Education / University",
+  "description": "Educational certificate including marksheet, degree, diploma, or transcript",
+  "fields": [
+    {"name": "roll_number", "label": "Roll / Registration Number", "type": "string", "required": true},
+    {"name": "name", "label": "Student Name", "type": "string", "required": true},
+    {"name": "father_name", "label": "Father's Name", "type": "string", "required": false},
+    {"name": "mother_name", "label": "Mother's Name", "type": "string", "required": false},
+    {"name": "institution", "label": "Institution Name", "type": "string", "required": true},
+    {"name": "board_university", "label": "Board / University", "type": "string", "required": true},
+    {"name": "examination", "label": "Examination Name", "type": "string", "required": false},
+    {"name": "year_of_passing", "label": "Year of Passing", "type": "string", "required": true},
+    {"name": "grade_percentage", "label": "Grade / Percentage / CGPA", "type": "string", "required": false},
+    {"name": "subjects", "label": "Subjects", "type": "array", "required": false},
+    {"name": "certificate_number", "label": "Certificate Number", "type": "string", "required": false},
+    {"name": "date_of_issue", "label": "Date of Issue", "type": "date", "required": false}
+  ],
+  "keywords": ["education", "certificate", "marksheet", "degree", "diploma", "transcript", "university", "board", "examination", "roll number"]
+}

@@ -1,0 +1,60 @@
+{
+  "document_type": "Receipt",
+  "description": "Payment receipts, acknowledgment receipts, transaction confirmations",
+  "fields": [
+    {
+      "name": "receipt_number",
+      "type": "string",
+      "description": "Unique receipt number",
+      "required": true
+    },
+    {
+      "name": "receipt_date",
+      "type": "date",
+      "description": "Date of receipt",
+      "required": true
+    },
+    {
+      "name": "payer_name",
+      "type": "string",
+      "description": "Name of person/entity making payment",
+      "required": true
+    },
+    {
+      "name": "payee_name",
+      "type": "string",
+      "description": "Name of person/entity receiving payment",
+      "required": true
+    },
+    {
+      "name": "amount",
+      "type": "number",
+      "description": "Amount paid",
+      "required": true
+    },
+    {
+      "name": "currency",
+      "type": "string",
+      "description": "Currency code",
+      "required": false
+    },
+    {
+      "name": "payment_method",
+      "type": "string",
+      "description": "Method of payment (Cash, Cheque, Online, Card, etc.)",
+      "required": false
+    },
+    {
+      "name": "purpose",
+      "type": "string",
+      "description": "Purpose of payment",
+      "required": false
+    },
+    {
+      "name": "transaction_id",
+      "type": "string",
+      "description": "Transaction reference ID",
+      "required": false
+    }
+  ]
+}

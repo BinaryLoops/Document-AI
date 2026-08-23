@@ -1,0 +1,54 @@
+{
+  "document_type": "Application",
+  "description": "Government or institutional application forms",
+  "fields": [
+    {
+      "name": "applicant_name",
+      "type": "string",
+      "description": "Full name of the applicant",
+      "required": true
+    },
+    {
+      "name": "application_number",
+      "type": "string",
+      "description": "Unique application reference number",
+      "required": true
+    },
+    {
+      "name": "date_filed",
+      "type": "date",
+      "description": "Date when application was filed",
+      "required": true
+    },
+    {
+      "name": "purpose",
+      "type": "string",
+      "description": "Purpose or reason for application",
+      "required": true
+    },
+    {
+      "name": "applicant_address",
+      "type": "string",
+      "description": "Address of the applicant",
+      "required": false
+    },
+    {
+      "name": "contact_number",
+      "type": "string",
+      "description": "Contact phone number",
+      "required": false
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "description": "Email address",
+      "required": false
+    },
+    {
+      "name": "department",
+      "type": "string",
+      "description": "Department or office handling the application",
+      "required": false
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "document_type": "Address Proof",
+  "description": "Address verification documents like utility bills, bank statements, rental agreements",
+  "fields": [
+    {
+      "name": "full_name",
+      "type": "string",
+      "description": "Name of the person/entity",
+      "required": true
+    },
+    {
+      "name": "address",
+      "type": "string",
+      "description": "Complete residential or business address",
+      "required": true
+    },
+    {
+      "name": "issue_date",
+      "type": "date",
+      "description": "Date of issue or billing date",
+      "required": true
+    },
+    {
+      "name": "document_type_specific",
+      "type": "string",
+      "description": "Type of address proof (Utility Bill, Bank Statement, Rental Agreement, etc.)",
+      "required": false
+    },
+    {
+      "name": "account_number",
+      "type": "string",
+      "description": "Account or reference number",
+      "required": false
+    },
+    {
+      "name": "validity_period",
+      "type": "string",
+      "description": "Validity period or billing period",
+      "required": false
+    }
+  ]
+}

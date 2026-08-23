@@ -1,0 +1,22 @@
+{
+  "category": "land_record",
+  "display_name": "Land Record",
+  "department": "Revenue Department / Land Records Office",
+  "description": "Land record or property document including 7/12 extract, khata, patta, RoR",
+  "fields": [
+    {"name": "survey_number", "label": "Survey / Khasra Number", "type": "string", "required": true},
+    {"name": "khata_number", "label": "Khata / Patta Number", "type": "string", "required": false},
+    {"name": "owner_name", "label": "Owner Name(s)", "type": "string", "required": true},
+    {"name": "father_husband_name", "label": "Father's / Husband's Name", "type": "string", "required": false},
+    {"name": "village", "label": "Village / Location", "type": "string", "required": true},
+    {"name": "taluka", "label": "Taluka / Tehsil", "type": "string", "required": false},
+    {"name": "district", "label": "District", "type": "string", "required": true},
+    {"name": "state", "label": "State", "type": "string", "required": false},
+    {"name": "area", "label": "Area (acres/hectares)", "type": "string", "required": true},
+    {"name": "land_type", "label": "Type of Land", "type": "string", "required": false},
+    {"name": "encumbrances", "label": "Encumbrances / Liens", "type": "string", "required": false},
+    {"name": "mutation_number", "label": "Mutation Number", "type": "string", "required": false},
+    {"name": "date_of_record", "label": "Date of Record", "type": "date", "required": false}
+  ],
+  "keywords": ["land record", "survey number", "khasra", "khata", "patta", "7/12", "property", "revenue", "mutation", "RoR"]
+}

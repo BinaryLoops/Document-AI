@@ -1,0 +1,60 @@
+{
+  "document_type": "Identity Proof",
+  "description": "Identity verification documents like Aadhaar, PAN, Passport, Driver's License",
+  "fields": [
+    {
+      "name": "full_name",
+      "type": "string",
+      "description": "Full legal name of the person",
+      "required": true
+    },
+    {
+      "name": "date_of_birth",
+      "type": "date",
+      "description": "Date of birth",
+      "required": true
+    },
+    {
+      "name": "document_number",
+      "type": "string",
+      "description": "Unique document identification number (Aadhaar, PAN, Passport number, etc.)",
+      "required": true
+    },
+    {
+      "name": "document_type_specific",
+      "type": "string",
+      "description": "Type of identity document (Aadhaar, PAN, Passport, License, etc.)",
+      "required": true
+    },
+    {
+      "name": "address",
+      "type": "string",
+      "description": "Residential address",
+      "required": false
+    },
+    {
+      "name": "issue_date",
+      "type": "date",
+      "description": "Date of issue",
+      "required": false
+    },
+    {
+      "name": "expiry_date",
+      "type": "date",
+      "description": "Date of expiry",
+      "required": false
+    },
+    {
+      "name": "gender",
+      "type": "string",
+      "description": "Gender",
+      "required": false
+    },
+    {
+      "name": "father_name",
+      "type": "string",
+      "description": "Father's name",
+      "required": false
+    }
+  ]
+}

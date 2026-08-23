@@ -1,0 +1,21 @@
+{
+  "category": "income_certificate",
+  "display_name": "Income Certificate",
+  "department": "Revenue Department / District Collectorate",
+  "description": "Income certificate issued by the Revenue Department certifying annual income",
+  "fields": [
+    {"name": "certificate_number", "label": "Certificate Number", "type": "string", "required": true},
+    {"name": "name", "label": "Name of Applicant", "type": "string", "required": true},
+    {"name": "father_husband_name", "label": "Father's / Husband's Name", "type": "string", "required": false},
+    {"name": "address", "label": "Address", "type": "string", "required": true},
+    {"name": "annual_income", "label": "Annual Income (₹)", "type": "number", "required": true},
+    {"name": "income_source", "label": "Source of Income", "type": "string", "required": false},
+    {"name": "financial_year", "label": "Financial Year", "type": "string", "required": true},
+    {"name": "date_of_issue", "label": "Date of Issue", "type": "date", "required": true},
+    {"name": "valid_until", "label": "Valid Until", "type": "date", "required": false},
+    {"name": "issuing_authority", "label": "Issuing Authority", "type": "string", "required": true},
+    {"name": "district", "label": "District", "type": "string", "required": false},
+    {"name": "state", "label": "State", "type": "string", "required": false}
+  ],
+  "keywords": ["income certificate", "annual income", "revenue department", "collectorate", "income proof", "BPL"]
+}

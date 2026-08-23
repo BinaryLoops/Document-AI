@@ -1,0 +1,23 @@
+{
+  "category": "passport",
+  "display_name": "Passport",
+  "department": "Ministry of External Affairs",
+  "description": "Indian passport or travel document issued by the Passport Seva",
+  "fields": [
+    {"name": "passport_number", "label": "Passport Number", "type": "string", "pattern": "^[A-Z]\\d{7}$", "required": true},
+    {"name": "surname", "label": "Surname", "type": "string", "required": true},
+    {"name": "given_name", "label": "Given Name(s)", "type": "string", "required": true},
+    {"name": "nationality", "label": "Nationality", "type": "string", "required": true},
+    {"name": "date_of_birth", "label": "Date of Birth", "type": "date", "required": true},
+    {"name": "sex", "label": "Sex", "type": "string", "enum": ["M", "F", "X"], "required": true},
+    {"name": "place_of_birth", "label": "Place of Birth", "type": "string", "required": true},
+    {"name": "date_of_issue", "label": "Date of Issue", "type": "date", "required": true},
+    {"name": "date_of_expiry", "label": "Date of Expiry", "type": "date", "required": true},
+    {"name": "place_of_issue", "label": "Place of Issue", "type": "string", "required": false},
+    {"name": "father_name", "label": "Father's Name", "type": "string", "required": false},
+    {"name": "mother_name", "label": "Mother's Name", "type": "string", "required": false},
+    {"name": "address", "label": "Address", "type": "string", "required": false},
+    {"name": "file_number", "label": "File Number", "type": "string", "required": false}
+  ],
+  "keywords": ["passport", "travel document", "passport seva", "MEA", "republic of india", "nationality"]
+}

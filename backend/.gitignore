@@ -1,0 +1,43 @@
+# Secrets
+.env
+.env.*
+!.env.example
+!.env.template
+*firebase*adminsdk*.json
+*serviceAccountKey*.json
+gen_keys/
+vault/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+.venv*/
+*.egg-info/
+
+# Runtime data / local stores (never commit — regenerated at startup)
+*.db
+*.db-shm
+*.db-wal
+auth_store.json
+gen_store.json
+kg_store.json
+auth_store.json.bak
+generated_pdfs/
+
+# Test / coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+tests/_smoke_results.json
+
+# Logs
+*.log
+logs/
+uvicorn.pid
+
+# OS/editor junk
+.DS_Store
+.vscode/
+.streamlit/secrets.toml

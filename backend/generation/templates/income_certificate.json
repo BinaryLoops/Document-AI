@@ -1,0 +1,41 @@
+{
+  "document_type": "income_certificate",
+  "display_name": "Income Certificate",
+  "issuing_authority": "Tehsildar / Revenue Department",
+  "validity_years": 1,
+  "sections": [
+    {
+      "name": "Applicant Details",
+      "fields": [
+        { "name": "full_name",          "label": "Full Name",             "type": "text",    "required": true,  "max_length": 100 },
+        { "name": "date_of_birth",      "label": "Date of Birth",         "type": "date",    "required": true },
+        { "name": "gender",             "label": "Gender",                "type": "enum",    "required": true,  "options": ["Male", "Female", "Other"] },
+        { "name": "address",            "label": "Residential Address",   "type": "textarea","required": true },
+        { "name": "aadhaar_number",     "label": "Aadhaar Number",        "type": "text",    "required": true,  "pattern": "^[0-9]{12}$" }
+      ]
+    },
+    {
+      "name": "Income Details",
+      "fields": [
+        { "name": "annual_income",      "label": "Annual Income (INR)",   "type": "number",  "required": true },
+        { "name": "income_source",      "label": "Source of Income",      "type": "enum",    "required": true,
+          "options": ["Agriculture", "Business", "Employment", "Pension", "Others"] },
+        { "name": "income_source_detail","label": "Income Source Details","type": "text",    "required": false, "max_length": 200 },
+        { "name": "family_income",      "label": "Total Family Income (INR)","type": "number","required": false },
+        { "name": "purpose",            "label": "Purpose of Certificate","type": "text",    "required": true,  "max_length": 200 }
+      ]
+    },
+    {
+      "name": "Family Details",
+      "fields": [
+        { "name": "father_name",        "label": "Father's / Husband's Name","type": "text", "required": true,  "max_length": 100 },
+        { "name": "occupation",         "label": "Applicant's Occupation","type": "text",    "required": false, "max_length": 100 },
+        { "name": "caste_category",     "label": "Caste Category",        "type": "enum",    "required": false,
+          "options": ["General", "OBC", "SC", "ST"] }
+      ]
+    }
+  ],
+  "supporting_docs_required": ["Identity Proof", "Address Proof", "Income Proof (salary slip / ITR)"],
+  "mrz_enabled": false,
+  "biometric_enabled": false
+}

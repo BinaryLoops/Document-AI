@@ -1,0 +1,51 @@
+{
+  "document_type": "land_record",
+  "display_name": "Land Record (Patta / RoR)",
+  "issuing_authority": "Revenue Department / Tahsildar",
+  "validity_years": null,
+  "sections": [
+    {
+      "name": "Owner Details",
+      "fields": [
+        { "name": "owner_name",         "label": "Owner's Full Name",     "type": "text",    "required": true,  "max_length": 100 },
+        { "name": "father_name",        "label": "Father's Name",         "type": "text",    "required": true,  "max_length": 100 },
+        { "name": "owner_address",      "label": "Owner's Address",       "type": "textarea","required": true },
+        { "name": "aadhaar_number",     "label": "Aadhaar Number",        "type": "text",    "required": true,  "pattern": "^[0-9]{12}$" }
+      ]
+    },
+    {
+      "name": "Land Details",
+      "fields": [
+        { "name": "survey_number",      "label": "Survey / Khasra Number","type": "text",    "required": true,  "max_length": 50 },
+        { "name": "plot_number",        "label": "Plot / Patta Number",   "type": "text",    "required": false, "max_length": 50 },
+        { "name": "area",               "label": "Area",                  "type": "text",    "required": true,  "max_length": 50,
+          "help": "e.g. 2.5 Acres or 1012 sq.m." },
+        { "name": "land_type",          "label": "Land Type",             "type": "enum",    "required": true,
+          "options": ["Agricultural", "Residential", "Commercial", "Industrial", "Forest"] },
+        { "name": "land_use",           "label": "Current Land Use",      "type": "text",    "required": false, "max_length": 100 }
+      ]
+    },
+    {
+      "name": "Location Details",
+      "fields": [
+        { "name": "village",            "label": "Village / Locality",    "type": "text",    "required": true,  "max_length": 100 },
+        { "name": "tehsil",             "label": "Tehsil",                "type": "text",    "required": true,  "max_length": 100 },
+        { "name": "district",           "label": "District",              "type": "text",    "required": true,  "max_length": 100 },
+        { "name": "state",              "label": "State",                 "type": "text",    "required": true,  "max_length": 50 },
+        { "name": "boundaries",         "label": "Boundaries (N/S/E/W)",  "type": "textarea","required": false }
+      ]
+    },
+    {
+      "name": "Transaction Details",
+      "fields": [
+        { "name": "transaction_type",   "label": "Transaction Type",      "type": "enum",    "required": true,
+          "options": ["Sale", "Inheritance", "Gift", "Partition", "Original Patta"] },
+        { "name": "mutation_number",    "label": "Mutation Number",       "type": "text",    "required": false, "max_length": 50 },
+        { "name": "encumbrances",       "label": "Encumbrances / Liens",  "type": "textarea","required": false }
+      ]
+    }
+  ],
+  "supporting_docs_required": ["Identity Proof", "Previous Land Records", "No-Objection Certificate"],
+  "mrz_enabled": false,
+  "biometric_enabled": false
+}

@@ -1,0 +1,13 @@
+INFO:     Started server process [15636]
+INFO:     Waiting for application startup.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 7923.80it/s]
+C:\Users\mruni\Downloads\SIH-main (1)\DocuMind-AI-SIH\backend\embedding\model.py:78: FutureWarning: The `get_sentence_embedding_dimension` method has been renamed to `get_embedding_dimension`.
+  self._dimension = self.model.get_sentence_embedding_dimension()
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 6437.39it/s]
+C:\Users\mruni\Downloads\SIH-main (1)\DocuMind-AI-SIH\backend\embedding\model.py:78: FutureWarning: The `get_sentence_embedding_dimension` method has been renamed to `get_embedding_dimension`.
+  self._dimension = self.model.get_sentence_embedding_dimension()
+C:\Users\mruni\Downloads\SIH-main (1)\DocuMind-AI-SIH\backend\routes\routes.py:448: FastAPIDeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+  search_type: str = Query(
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)

@@ -1,0 +1,41 @@
+{
+  "document_type": "birth_certificate",
+  "display_name": "Birth Certificate",
+  "issuing_authority": "Municipal Corporation / Gram Panchayat",
+  "validity_years": null,
+  "sections": [
+    {
+      "name": "Child's Details",
+      "fields": [
+        { "name": "child_name",         "label": "Name of Child",        "type": "text",  "required": true,  "max_length": 100 },
+        { "name": "date_of_birth",      "label": "Date of Birth",        "type": "date",  "required": true },
+        { "name": "time_of_birth",      "label": "Time of Birth",        "type": "text",  "required": false, "max_length": 10 },
+        { "name": "place_of_birth",     "label": "Place of Birth",       "type": "text",  "required": true,  "max_length": 200 },
+        { "name": "gender",             "label": "Gender",               "type": "enum",  "required": true,  "options": ["Male", "Female", "Other"] },
+        { "name": "birth_order",        "label": "Birth Order",          "type": "text",  "required": false, "max_length": 20,
+          "help": "e.g. First, Second" }
+      ]
+    },
+    {
+      "name": "Parent Details",
+      "fields": [
+        { "name": "father_name",        "label": "Father's Full Name",   "type": "text",  "required": true,  "max_length": 100 },
+        { "name": "mother_name",        "label": "Mother's Full Name",   "type": "text",  "required": true,  "max_length": 100 },
+        { "name": "father_nationality", "label": "Father's Nationality", "type": "text",  "required": false, "default": "Indian" },
+        { "name": "mother_nationality", "label": "Mother's Nationality", "type": "text",  "required": false, "default": "Indian" },
+        { "name": "permanent_address",  "label": "Parents' Address",     "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "name": "Registration Details",
+      "fields": [
+        { "name": "hospital_name",      "label": "Hospital / Institution","type": "text", "required": false, "max_length": 150 },
+        { "name": "registration_date",  "label": "Date of Registration", "type": "date",  "required": true },
+        { "name": "ward_no",            "label": "Ward / Village No.",   "type": "text",  "required": false, "max_length": 20 }
+      ]
+    }
+  ],
+  "supporting_docs_required": ["Hospital Discharge Summary or Midwife Certificate", "Parents' Identity Proof"],
+  "mrz_enabled": false,
+  "biometric_enabled": false
+}

@@ -1,0 +1,136 @@
+# =============================================================================
+# DocuMind AI Backend — Docker Compose (local / staging)
+# =============================================================================
+# Services:
+#   api        — the FastAPI backend (this repo)
+#   ollama     — local free LLM (optional, profile: llm)
+#   neo4j      — graph database backing the Knowledge Graph (optional, profile: graph)
+#   prometheus — metrics scraping (optional, profile: monitoring)
+#   grafana    — metrics dashboards (optional, profile: monitoring)
+#
+# Usage:
+#   docker compose up -d --build                      # api only
+#   docker compose --profile llm up -d --build         # api + ollama
+#   docker compose --profile monitoring up -d --build  # api + prometheus + grafana
+#   docker compose --profile full up -d --build        # everything
+# =============================================================================
+
+services:
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    image: documind-backend:latest
+    container_name: documind-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT:-8000}:8000"
+    env_file:
+      - ../backend/.env
+    environment:
+      APP_ENV: production
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      WORKERS: ${WORKERS:-2}
+      NEO4J_URI: bolt://neo4j:7687
+      OLLAMA_HOST: http://ollama:11434
+      # Persist all SQLite/JSON state under the mounted /app/data volume
+      AUTH_STORE_PATH: /app/data/auth_store.json
+      GEN_STORE_PATH: /app/data/gen_store.json
+      KG_STORE_PATH: /app/data/kg_store.json
+      DIGILOCKER_DB: /app/data/digilocker.db
+      VERIFICATION_DB: /app/data/verification.db
+      TRACKING_DB: /app/data/tracking.db
+      AUDIT_DB_PATH: /app/data/audit.db
+    volumes:
+      # Persist data that must survive container restarts/redeploys.
+      - documind_vault:/app/vault
+      - documind_gen_keys:/app/gen_keys
+      - documind_generated_pdfs:/app/generated_pdfs
+      - documind_data:/app/data
+      - ../backend/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    networks:
+      - documind_net
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: documind-ollama
+    restart: unless-stopped
+    profiles: ["llm", "full"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - documind_net
+
+  neo4j:
+    image: neo4j:5-community
+    container_name: documind-neo4j
+    restart: unless-stopped
+    profiles: ["graph", "full"]
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-changeme12345}
+      NEO4J_PLUGINS: '["apoc"]'
+    ports:
+      - "7474:7474"   # browser UI
+      - "7687:7687"   # bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    networks:
+      - documind_net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: documind-prometheus
+    restart: unless-stopped
+    profiles: ["monitoring", "full"]
+    volumes:
+      - ../backend/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+    networks:
+      - documind_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: documind-grafana
+    restart: unless-stopped
+    profiles: ["monitoring", "full"]
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../backend/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - documind_net
+
+networks:
+  documind_net:
+    driver: bridge
+
+volumes:
+  documind_vault:
+  documind_gen_keys:
+  documind_generated_pdfs:
+  documind_data:
+  ollama_data:
+  neo4j_data:
+  neo4j_logs:
+  prometheus_data:
+  grafana_data:

@@ -1,0 +1,60 @@
+{
+  "document_type": "Certificate",
+  "description": "Various types of certificates including birth, marriage, education, income, caste",
+  "fields": [
+    {
+      "name": "certificate_type",
+      "type": "string",
+      "description": "Type of certificate (Birth, Death, Marriage, Education, Experience, etc.)",
+      "required": true
+    },
+    {
+      "name": "holder_name",
+      "type": "string",
+      "description": "Name of the person the certificate is about",
+      "required": true
+    },
+    {
+      "name": "certificate_number",
+      "type": "string",
+      "description": "Unique certificate number",
+      "required": false
+    },
+    {
+      "name": "issue_date",
+      "type": "date",
+      "description": "Date of issue",
+      "required": true
+    },
+    {
+      "name": "issuing_authority",
+      "type": "string",
+      "description": "Authority or organization that issued the certificate",
+      "required": true
+    },
+    {
+      "name": "event_date",
+      "type": "date",
+      "description": "Date of the event (birth, marriage, completion, etc.)",
+      "required": false
+    },
+    {
+      "name": "father_name",
+      "type": "string",
+      "description": "Father's name",
+      "required": false
+    },
+    {
+      "name": "mother_name",
+      "type": "string",
+      "description": "Mother's name",
+      "required": false
+    },
+    {
+      "name": "place",
+      "type": "string",
+      "description": "Place related to the certificate",
+      "required": false
+    }
+  ]
+}

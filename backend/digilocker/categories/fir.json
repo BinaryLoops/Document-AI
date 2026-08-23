@@ -1,0 +1,21 @@
+{
+  "category": "fir",
+  "display_name": "FIR (First Information Report)",
+  "department": "Police Department",
+  "description": "First Information Report filed at a police station under CrPC",
+  "fields": [
+    {"name": "fir_number", "label": "FIR Number", "type": "string", "required": true},
+    {"name": "police_station", "label": "Police Station", "type": "string", "required": true},
+    {"name": "district", "label": "District", "type": "string", "required": true},
+    {"name": "date_of_occurrence", "label": "Date & Time of Occurrence", "type": "string", "required": true},
+    {"name": "date_of_filing", "label": "Date of Filing", "type": "date", "required": true},
+    {"name": "complainant_name", "label": "Complainant Name", "type": "string", "required": true},
+    {"name": "complainant_address", "label": "Complainant Address", "type": "string", "required": false},
+    {"name": "accused_name", "label": "Accused Name(s)", "type": "string", "required": false},
+    {"name": "sections_applied", "label": "Sections / Acts Applied", "type": "array", "required": true},
+    {"name": "place_of_occurrence", "label": "Place of Occurrence", "type": "string", "required": false},
+    {"name": "brief_facts", "label": "Brief Facts", "type": "string", "required": false},
+    {"name": "investigating_officer", "label": "Investigating Officer", "type": "string", "required": false}
+  ],
+  "keywords": ["FIR", "first information report", "police", "complaint", "criminal", "IPC", "BNS", "sections", "accused"]
+}

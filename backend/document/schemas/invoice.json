@@ -1,0 +1,72 @@
+{
+  "document_type": "Invoice",
+  "description": "Invoices, bills, payment requests, tax invoices",
+  "fields": [
+    {
+      "name": "invoice_number",
+      "type": "string",
+      "description": "Unique invoice number",
+      "required": true
+    },
+    {
+      "name": "invoice_date",
+      "type": "date",
+      "description": "Date of invoice",
+      "required": true
+    },
+    {
+      "name": "seller_name",
+      "type": "string",
+      "description": "Name of seller/service provider",
+      "required": true
+    },
+    {
+      "name": "buyer_name",
+      "type": "string",
+      "description": "Name of buyer/customer",
+      "required": true
+    },
+    {
+      "name": "total_amount",
+      "type": "number",
+      "description": "Total invoice amount",
+      "required": true
+    },
+    {
+      "name": "currency",
+      "type": "string",
+      "description": "Currency code (INR, USD, etc.)",
+      "required": false
+    },
+    {
+      "name": "tax_amount",
+      "type": "number",
+      "description": "Total tax amount (GST, VAT, etc.)",
+      "required": false
+    },
+    {
+      "name": "due_date",
+      "type": "date",
+      "description": "Payment due date",
+      "required": false
+    },
+    {
+      "name": "gstin",
+      "type": "string",
+      "description": "GST identification number",
+      "required": false
+    },
+    {
+      "name": "seller_address",
+      "type": "string",
+      "description": "Seller's address",
+      "required": false
+    },
+    {
+      "name": "buyer_address",
+      "type": "string",
+      "description": "Buyer's address",
+      "required": false
+    }
+  ]
+}

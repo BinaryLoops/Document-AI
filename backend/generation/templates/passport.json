@@ -1,0 +1,39 @@
+{
+  "document_type": "passport",
+  "display_name": "Passport",
+  "issuing_authority": "Ministry of External Affairs, Government of India",
+  "validity_years": 10,
+  "sections": [
+    {
+      "name": "Personal Information",
+      "fields": [
+        { "name": "surname",         "label": "Surname",             "type": "text",  "required": true,  "max_length": 50 },
+        { "name": "given_names",     "label": "Given Name(s)",       "type": "text",  "required": true,  "max_length": 100 },
+        { "name": "date_of_birth",   "label": "Date of Birth",       "type": "date",  "required": true },
+        { "name": "place_of_birth",  "label": "Place of Birth",      "type": "text",  "required": true,  "max_length": 100 },
+        { "name": "gender",          "label": "Gender",              "type": "enum",  "required": true,  "options": ["M", "F", "X"] },
+        { "name": "nationality",     "label": "Nationality",         "type": "text",  "required": true,  "default": "Indian" },
+        { "name": "marital_status",  "label": "Marital Status",      "type": "enum",  "required": false, "options": ["Single", "Married", "Divorced", "Widowed"] }
+      ]
+    },
+    {
+      "name": "Identity Details",
+      "fields": [
+        { "name": "aadhaar_number",  "label": "Aadhaar Number",      "type": "text",  "required": true,  "pattern": "^[0-9]{12}$" },
+        { "name": "father_name",     "label": "Father's Name",       "type": "text",  "required": true,  "max_length": 100 },
+        { "name": "mother_name",     "label": "Mother's Name",       "type": "text",  "required": true,  "max_length": 100 },
+        { "name": "address",         "label": "Permanent Address",   "type": "textarea", "required": true }
+      ]
+    },
+    {
+      "name": "Application Details",
+      "fields": [
+        { "name": "application_type","label": "Application Type",    "type": "enum",  "required": true,  "options": ["Fresh", "Renewal", "Reissue"] },
+        { "name": "emergency_contact","label": "Emergency Contact",  "type": "text",  "required": false, "max_length": 100 }
+      ]
+    }
+  ],
+  "supporting_docs_required": ["Identity Proof", "Address Proof", "Date of Birth Proof"],
+  "mrz_enabled": true,
+  "biometric_enabled": true
+}

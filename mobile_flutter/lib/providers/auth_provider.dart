@@ -1,0 +1,110 @@
+import 'package:flutter/foundation.dart';
+
+import '../core/constants.dart';
+import '../models/user_model.dart';
+import '../services/api_client.dart';
+import '../services/api_service.dart';
+import '../services/storage_service.dart';
+
+enum AuthStatus { unknown, authenticated, unauthenticated }
+
+/// Holds the current session (token presence + cached profile) and exposes
+/// the multi-step login flows (citizen OTP / official-admin-issuer MFA).
+class AuthProvider extends ChangeNotifier {
+  AuthStatus status = AuthStatus.unknown;
+  UserModel? currentUser;
+
+  String? _pendingSessionToken;
+  String? _pendingOtpId;
+  String? _pendingDevOtp;
+  UserRole? _pendingRole;
+
+  Future<void> bootstrap() async {
+    final token = await StorageService.instance.getAccessToken();
+    if (token == null || token.isEmpty) {
+      status = AuthStatus.unauthenticated;
+      notifyListeners();
+      return;
+    }
+    try {
+      final profile = await ApiService.instance.me();
+      currentUser = UserModel.fromJson(profile);
+      await StorageService.instance.saveUserProfile(profile);
+      status = AuthStatus.authenticated;
+    } catch (error) {
+      final isAuthorizationFailure = error is ApiException &&
+          (error.statusCode == 401 || error.statusCode == 403);
+      if (isAuthorizationFailure) {
+        await StorageService.instance.clearSession();
+        status = AuthStatus.unauthenticated;
+        notifyListeners();
+        return;
+      }
+      final cached = await StorageService.instance.getUserProfile();
+      if (cached != null) {
+        currentUser = UserModel.fromJson(cached);
+        status = AuthStatus.authenticated;
+      } else {
+        status = AuthStatus.unauthenticated;
+      }
+    }
+    notifyListeners();
+  }
+
+  /// Step 1 login. Returns a map describing what happens next:
+  ///  {'next': 'otp'} for citizens, {'next': 'mfa'} for gov/admin/issuer,
+  ///  {'next': 'done'} if the backend short-circuits straight to tokens.
+  Future<Map<String, dynamic>> login(UserRole role, Map<String, dynamic> fields) async {
+    final result = await ApiService.instance.login(role: role.apiValue, fields: fields);
+    _pendingRole = role;
+    _pendingSessionToken = result['session_token']?.toString();
+    _pendingOtpId = result['otp_id']?.toString();
+    _pendingDevOtp = result['dev_otp']?.toString();
+
+    if (result['access_token'] != null) {
+      await _completeLogin(result);
+      return {'next': 'done'};
+    }
+    final next = role == UserRole.citizen ? 'otp' : 'mfa';
+    return {'next': next, ...result};
+  }
+
+  Future<void> confirmOtp(String otp) async {
+    final otpId = _pendingOtpId;
+    if (otpId == null || otpId.isEmpty) {
+      throw StateError('OTP session expired. Please request a new OTP.');
+    }
+    final result = await ApiService.instance.verifyOtp(otpId: otpId, code: otp);
+    await _completeLogin(result);
+  }
+
+  Future<void> confirmMfa(String code) async {
+    final result = await ApiService.instance
+        .verifyMfa(sessionToken: _pendingSessionToken ?? '', code: code);
+    await _completeLogin(result);
+  }
+
+  Future<void> _completeLogin(Map<String, dynamic> result) async {
+    final profile = (result['user'] as Map?)?.cast<String, dynamic>() ?? result;
+    currentUser = UserModel.fromJson(profile);
+    await StorageService.instance.saveUserProfile(profile);
+    await StorageService.instance.saveRole(currentUser!.role.apiValue);
+    status = AuthStatus.authenticated;
+    notifyListeners();
+  }
+
+  Future<void> logout() async {
+    try {
+      await ApiService.instance.logout();
+    } catch (_) {
+      await StorageService.instance.clearSession();
+    }
+    currentUser = null;
+    status = AuthStatus.unauthenticated;
+    notifyListeners();
+  }
+
+  UserRole? get pendingRole => _pendingRole;
+
+  String? get pendingDevOtp => _pendingDevOtp;
+}

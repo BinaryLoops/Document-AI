@@ -1,0 +1,76 @@
+# Core dependencies
+numpy>=1.24.0
+torch>=2.0.0
+streamlit>=1.22.0
+fastapi>=0.100.0
+uvicorn>=0.22.0
+python-dotenv>=0.20.0
+pydantic>=1.10.0
+python-multipart>=0.0.6
+
+# Embedding and vector search
+sentence-transformers>=2.2.2
+transformers>=4.28.1
+faiss-cpu>=1.8.0        # 1.8.0+ required for NumPy 2.x ABI compatibility (older builds raise AttributeError: _ARRAY_API not found)
+
+# Document processing
+PyPDF2>=3.0.0
+python-docx>=0.8.11
+pdfplumber>=0.5.28
+PyMuPDF>=1.18.20
+Pillow>=9.0.0
+
+# OCR (P1)
+pytesseract>=0.3.10
+easyocr>=1.7.0
+opencv-python-headless>=4.8.0  # Enhanced OCR preprocessing: 300-DPI upscale, Otsu, deskew, denoise (headless -- no GUI libs needed in containers)
+
+# Text processing and matching (P7, P14)
+rapidfuzz>=3.0.0
+python-Levenshtein>=0.21.0
+
+# Keyword search (P5)
+rank-bm25>=0.2.2
+
+# Knowledge Graph dependencies (P9)
+neo4j>=5.0.0
+networkx>=2.5
+matplotlib>=3.4.0
+spacy>=3.0.0
+pyvis>=0.3.2
+
+# LLM integration
+openai>=1.0.0
+
+# Firebase integration (P16)
+firebase-admin>=6.0.0
+
+# Date extraction (P13)
+python-dateutil>=2.8.2
+datefinder>=0.7.3
+
+# Authentication (Phase AUTH)
+passlib[bcrypt]>=1.7.4    # password hashing (bcrypt rounds=12)
+PyJWT>=2.8.0              # JWT access tokens (HS256)
+pyotp>=2.9.0              # TOTP/HOTP for MFA (RFC 6238)
+user-agents>=2.2.0        # device fingerprinting from User-Agent strings
+
+# Digital Locker & Verification Engine
+cryptography>=41.0.0           # AES-256-GCM envelope encryption
+aiosqlite>=0.19.0              # Async SQLite for document & verification metadata
+qrcode[pil]>=7.4               # QR code generation for document verification
+imagehash>=4.3.1               # Perceptual image hashing (near-duplicate detection)
+pyclamd>=0.4.0                 # ClamAV malware scanning (optional, needs clamd)
+
+# Document Generation Engine (Phase GEN)
+reportlab>=4.0.0               # PDF generation: ReportLab Platypus + Canvas
+
+# Monitoring
+prometheus-fastapi-instrumentator>=7.0.0   # /metrics endpoint for Prometheus scraping
+pydantic-settings>=2.0.0                   # core/config.py multi-env settings
+
+# Utilities
+tqdm>=4.65.0
+requests>=2.28.0
+pyyaml>=6.0
+rapidfuzz>=3.0.0                # Fuzzy name matching (AI engine + KG)

@@ -1,0 +1,30 @@
+{
+  "document_type": "Other",
+  "description": "Miscellaneous documents that don't fit standard categories",
+  "fields": [
+    {
+      "name": "document_title",
+      "type": "string",
+      "description": "Title or subject of the document",
+      "required": false
+    },
+    {
+      "name": "date",
+      "type": "date",
+      "description": "Document date",
+      "required": false
+    },
+    {
+      "name": "author",
+      "type": "string",
+      "description": "Author or creator of the document",
+      "required": false
+    },
+    {
+      "name": "reference_number",
+      "type": "string",
+      "description": "Any reference or identification number",
+      "required": false
+    }
+  ]
+}

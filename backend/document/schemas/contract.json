@@ -1,0 +1,72 @@
+{
+  "document_type": "Contract",
+  "description": "Contracts, agreements, memorandums of understanding",
+  "fields": [
+    {
+      "name": "contract_title",
+      "type": "string",
+      "description": "Title or subject of the contract",
+      "required": true
+    },
+    {
+      "name": "contract_date",
+      "type": "date",
+      "description": "Date of contract execution",
+      "required": true
+    },
+    {
+      "name": "party_a_name",
+      "type": "string",
+      "description": "Name of first party",
+      "required": true
+    },
+    {
+      "name": "party_b_name",
+      "type": "string",
+      "description": "Name of second party",
+      "required": true
+    },
+    {
+      "name": "contract_number",
+      "type": "string",
+      "description": "Contract reference number",
+      "required": false
+    },
+    {
+      "name": "effective_date",
+      "type": "date",
+      "description": "Date when contract becomes effective",
+      "required": false
+    },
+    {
+      "name": "expiry_date",
+      "type": "date",
+      "description": "Date when contract expires",
+      "required": false
+    },
+    {
+      "name": "contract_value",
+      "type": "number",
+      "description": "Total value of the contract",
+      "required": false
+    },
+    {
+      "name": "party_a_address",
+      "type": "string",
+      "description": "Address of first party",
+      "required": false
+    },
+    {
+      "name": "party_b_address",
+      "type": "string",
+      "description": "Address of second party",
+      "required": false
+    },
+    {
+      "name": "witness_name",
+      "type": "string",
+      "description": "Name of witness if present",
+      "required": false
+    }
+  ]
+}

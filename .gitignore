@@ -1,0 +1,45 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+build/
+
+# JavaScript
+node_modules/
+.next/
+
+# Runtime databases and generated state
+*.db
+*.db-shm
+*.db-wal
+backend/auth_store.json
+backend/gen_store.json
+backend/kg_store.json
+backend/vault/
+backend/gen_keys/
+backend/generated_pdfs/
+backend/logs/
+
+# Local tooling and OS files
+.vscode/
+.DS_Store
+Thumbs.db
+nul

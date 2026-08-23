@@ -1,0 +1,21 @@
+{
+  "category": "court_order",
+  "display_name": "Court Order",
+  "department": "Judiciary",
+  "description": "Court order, judgment, decree, or ruling issued by any court of law",
+  "fields": [
+    {"name": "case_number", "label": "Case Number", "type": "string", "required": true},
+    {"name": "court_name", "label": "Court Name", "type": "string", "required": true},
+    {"name": "judge_name", "label": "Judge / Bench", "type": "string", "required": false},
+    {"name": "petitioner", "label": "Petitioner / Plaintiff", "type": "string", "required": true},
+    {"name": "respondent", "label": "Respondent / Defendant", "type": "string", "required": true},
+    {"name": "case_type", "label": "Case Type", "type": "string", "required": false},
+    {"name": "order_date", "label": "Date of Order", "type": "date", "required": true},
+    {"name": "order_type", "label": "Type of Order", "type": "string", "required": false},
+    {"name": "relief_granted", "label": "Relief / Direction", "type": "string", "required": false},
+    {"name": "next_date", "label": "Next Hearing Date", "type": "date", "required": false},
+    {"name": "sections_cited", "label": "Sections / Laws Cited", "type": "array", "required": false},
+    {"name": "disposed", "label": "Case Disposed?", "type": "boolean", "required": false}
+  ],
+  "keywords": ["court order", "judgment", "decree", "ruling", "case", "petitioner", "respondent", "honorable", "court"]
+}

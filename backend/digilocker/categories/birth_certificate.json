@@ -1,0 +1,22 @@
+{
+  "category": "birth_certificate",
+  "display_name": "Birth Certificate",
+  "department": "Municipal Corporation / Registrar of Births and Deaths",
+  "description": "Birth certificate issued under the Registration of Births and Deaths Act",
+  "fields": [
+    {"name": "registration_number", "label": "Registration Number", "type": "string", "required": true},
+    {"name": "name", "label": "Name of Child", "type": "string", "required": true},
+    {"name": "sex", "label": "Sex", "type": "string", "enum": ["Male", "Female", "Other"], "required": true},
+    {"name": "date_of_birth", "label": "Date of Birth", "type": "date", "required": true},
+    {"name": "place_of_birth", "label": "Place of Birth", "type": "string", "required": true},
+    {"name": "father_name", "label": "Father's Name", "type": "string", "required": true},
+    {"name": "mother_name", "label": "Mother's Name", "type": "string", "required": true},
+    {"name": "father_nationality", "label": "Father's Nationality", "type": "string", "required": false},
+    {"name": "mother_nationality", "label": "Mother's Nationality", "type": "string", "required": false},
+    {"name": "address_at_birth", "label": "Address at Time of Birth", "type": "string", "required": false},
+    {"name": "permanent_address", "label": "Permanent Address", "type": "string", "required": false},
+    {"name": "date_of_registration", "label": "Date of Registration", "type": "date", "required": false},
+    {"name": "registrar_name", "label": "Registrar Name", "type": "string", "required": false}
+  ],
+  "keywords": ["birth certificate", "born", "registration of births", "municipal", "registrar", "child"]
+}

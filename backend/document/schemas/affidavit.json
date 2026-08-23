@@ -1,0 +1,48 @@
+{
+  "document_type": "Affidavit",
+  "description": "Sworn statements and legal declarations",
+  "fields": [
+    {
+      "name": "deponent_name",
+      "type": "string",
+      "description": "Name of the person making the affidavit",
+      "required": true
+    },
+    {
+      "name": "statement_date",
+      "type": "date",
+      "description": "Date when affidavit was sworn",
+      "required": true
+    },
+    {
+      "name": "notary_name",
+      "type": "string",
+      "description": "Name of the notary public or oath commissioner",
+      "required": false
+    },
+    {
+      "name": "purpose",
+      "type": "string",
+      "description": "Purpose or subject matter of the affidavit",
+      "required": true
+    },
+    {
+      "name": "case_reference",
+      "type": "string",
+      "description": "Case or matter reference number",
+      "required": false
+    },
+    {
+      "name": "deponent_address",
+      "type": "string",
+      "description": "Address of the deponent",
+      "required": false
+    },
+    {
+      "name": "identification_details",
+      "type": "string",
+      "description": "Identification details of the deponent",
+      "required": false
+    }
+  ]
+}
